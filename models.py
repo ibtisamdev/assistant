@@ -1,7 +1,11 @@
+import logging
 from datetime import datetime
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 # === Enums ===
@@ -215,8 +219,33 @@ class Memory(BaseModel):
     user_profile_path: str = Field(default="user_profile.json")
 
     def update_timestamp(self):
-        """Update last_updated timestamp"""
-        self.metadata.last_updated = datetime.now()
+        """Update last_updated timestamp with validation"""
+        new_timestamp = datetime.now()
+
+        # Validation: ensure last_updated >= created_at
+        if new_timestamp < self.metadata.created_at:
+            logger.warning(
+                f"Timestamp anomaly detected: new timestamp ({new_timestamp}) "
+                f"is before created_at ({self.metadata.created_at}). Using created_at instead."
+            )
+            self.metadata.last_updated = self.metadata.created_at
+        else:
+            self.metadata.last_updated = new_timestamp
+
+    def validate_timestamps(self) -> bool:
+        """
+        Validate timestamp consistency.
+        Returns True if valid, False if corrected.
+        """
+        if self.metadata.last_updated < self.metadata.created_at:
+            logger.warning(
+                f"Corrupted timestamps detected: "
+                f"last_updated ({self.metadata.last_updated}) < "
+                f"created_at ({self.metadata.created_at}). Fixing..."
+            )
+            self.metadata.last_updated = self.metadata.created_at
+            return False
+        return True
 
     def increment_llm_calls(self):
         """Track LLM usage"""

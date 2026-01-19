@@ -7,7 +7,7 @@ A comprehensive **AI planning assistant** that helps you create realistic daily 
 Enhance the assistant with robust time tracking and analytics capabilities to understand where time goes, compare planned vs actual, and drive continuous improvement.
 
 ## In Progress
-- [ ] Priority 1: Make it stable for daily use (bug fixes, error handling, session persistence)
+- [ ] Priority 2: Data Collection Core (TIME TRACKING) - see below
 
 ## Up Next
 
@@ -67,6 +67,47 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
 - [ ] Web UI for better visualization
 
 ## Completed
+
+### Priority 1: Stability for Daily Use (Completed 2026-01-19)
+- [x] **API Error Handling** - Comprehensive retry logic with exponential backoff
+  - Handles network errors, rate limits, timeouts
+  - 3 retry attempts with configurable backoff
+  - Custom `LLMError` exception for clear error reporting
+- [x] **API Key Validation** - Early validation at startup
+  - Checks for missing or malformed API keys
+  - User-friendly error messages before any work is done
+- [x] **Input Validation** - All user inputs validated
+  - Empty input rejection with re-prompt
+  - Maximum length enforcement (prevents token overflow)
+  - Case-insensitive exit keywords ("no", "n", "done", "exit", "quit")
+- [x] **Timestamp Consistency** - Fixed timestamp corruption bug
+  - Validation ensures `last_updated >= created_at`
+  - Auto-fixes corrupted timestamps on session load
+- [x] **Corrupted Session Recovery** - Graceful handling with data salvage
+  - Attempts partial recovery of conversation history and plans
+  - User notification instead of silent data loss
+  - Corrupted files renamed with timestamp for debugging
+- [x] **Disk/Permission Error Handling** - Comprehensive file system error handling
+  - Disk space checks before writes
+  - Permission error detection and user notification
+  - Atomic writes (temp file + rename) prevent corruption
+- [x] **Exception Handling** - Improved error handling in main.py
+  - Specific handlers for LLMError, FileNotFoundError, PermissionError
+  - No more double error output or re-raising after user notification
+  - Graceful exit on all error types
+- [x] **State Machine Validation** - Validates state transitions
+  - Logs warnings for unusual transitions
+  - Handles edge cases (empty questions in questions state)
+- [x] **Temp File Cleanup** - Automatic cleanup of stale .tmp files
+  - Cleans files older than 1 hour on startup
+  - Preserves recent files (may be from active sessions)
+- [x] **Test Suite** - 63 tests covering critical paths
+  - Memory persistence and corruption handling
+  - LLM error handling and retry logic
+  - Input validation and state machine
+  - ~70% code coverage on critical modules
+
+### Earlier Releases
 - [x] Initial version with clarifying questions and feedback loop
 - [x] Session persistence (JSON)
 - [x] User profile support

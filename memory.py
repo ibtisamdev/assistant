@@ -1,8 +1,10 @@
 import os
+import re
 import json
+import time
+import shutil
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 from models import (
@@ -43,6 +45,9 @@ class AgentMemory:
         self.session_date = session_date or datetime.now().strftime("%Y-%m-%d")
         self.session_path = self._get_session_path()
         self.is_resuming = False
+
+        # Clean up stale temp files
+        self._cleanup_temp_files()
 
         # Load or create memory
         if not force_new and os.path.exists(self.session_path):
@@ -165,10 +170,20 @@ class AgentMemory:
         )
 
     def _save(self):
-        """Save session to disk (atomic write)"""
+        """Save session to disk (atomic write) with comprehensive error handling"""
         try:
             # Ensure directory exists
             os.makedirs(self.SESSIONS_DIR, exist_ok=True)
+
+            # Check disk space (basic heuristic - at least 1MB free)
+            try:
+                stat = shutil.disk_usage(self.SESSIONS_DIR)
+                if stat.free < 1024 * 1024:  # Less than 1MB free
+                    logger.error("Low disk space! Cannot save session.")
+                    print("\n  WARNING: Low disk space - session may not be saved!")
+                    return
+            except Exception as e:
+                logger.warning(f"Could not check disk space: {e}")
 
             # Prepare data - use model_dump with mode='json' for datetime serialization
             data = self.memory.model_dump(mode="json")
@@ -181,38 +196,189 @@ class AgentMemory:
             os.replace(temp_path, self.session_path)
             logger.debug(f"Saved session to {self.session_path}")
 
+        except PermissionError:
+            logger.error(f"Permission denied writing to {self.session_path}")
+            print(f"\n  WARNING: Cannot save session - permission denied")
+            print(f"   Check file permissions: {self.session_path}")
+
+        except OSError as e:
+            if e.errno == 28:  # ENOSPC - No space left on device
+                logger.error("Disk full! Cannot save session.")
+                print("\n  WARNING: Disk full - session cannot be saved!")
+            else:
+                logger.error(f"OS error saving session: {e}")
+                print(f"\n  WARNING: Failed to save session: {e}")
+
         except IOError as e:
-            logger.error(f"Failed to save session: {e}")
+            logger.error(f"I/O error saving session: {e}")
+            print(f"\n  WARNING: Failed to save session: {e}")
+
         except Exception as e:
             logger.error(f"Unexpected error saving session: {e}")
+            print(f"\n  WARNING: Failed to save session: {e}")
 
     def _load_session(self) -> Memory:
-        """Load session from disk"""
+        """Load session from disk with validation and recovery"""
         try:
             with open(self.session_path, "r") as f:
                 data = json.load(f)
 
             memory = Memory.model_validate(data)
+
+            # Validate timestamp consistency
+            if not memory.validate_timestamps():
+                # Timestamps were corrected, save the fix
+                self.memory = memory
+                self._save()
+                logger.info("Fixed corrupted timestamps during load")
+
             logger.info(f"Loaded session from {self.session_path}")
             return memory
 
         except json.JSONDecodeError as e:
-            logger.error(f"Corrupted session file: {e}")
-            self._handle_corrupted_session()
-            return self._create_fresh_memory()
+            logger.error(f"Corrupted session file (invalid JSON): {e}")
+            return self._handle_corrupted_session_with_recovery()
 
         except Exception as e:
             logger.error(f"Failed to load session: {e}")
+            return self._handle_corrupted_session_with_recovery()
+
+    def _handle_corrupted_session_with_recovery(self) -> Memory:
+        """
+        Handle corrupted session with user notification and recovery attempt.
+        Returns either recovered partial data or fresh memory.
+        """
+        print("\n  WARNING: Session file is corrupted!")
+        print(f"   File: {self.session_path}")
+
+        # Try to read raw content for partial recovery
+        partial_data = self._attempt_partial_recovery()
+
+        if partial_data:
+            print("   Recovered some data from corrupted file")
+
+            # Create fresh memory but preserve conversation history if possible
+            memory = self._create_fresh_memory()
+
+            if "conversation" in partial_data:
+                try:
+                    # Restore conversation if possible
+                    memory.conversation = ConversationHistory.model_validate(
+                        partial_data["conversation"]
+                    )
+                    logger.info("Recovered conversation history")
+                    print("     - Conversation history was preserved")
+                except Exception as e:
+                    logger.error(f"Could not recover conversation history: {e}")
+                    print("     - Could not recover conversation history")
+
+            # Try to recover plan
+            if "agent_state" in partial_data and partial_data["agent_state"].get(
+                "plan"
+            ):
+                try:
+                    from models import Plan
+
+                    memory.agent_state.plan = Plan.model_validate(
+                        partial_data["agent_state"]["plan"]
+                    )
+                    logger.info("Recovered plan")
+                    print("     - Plan was preserved")
+                except Exception as e:
+                    logger.error(f"Could not recover plan: {e}")
+
+            print("     - Starting with fresh state machine\n")
+
+            # Rename corrupted file
+            self._rename_corrupted_session()
+            return memory
+        else:
+            print("   Could not recover any data")
+            print("     - Creating fresh session\n")
+            self._rename_corrupted_session()
             return self._create_fresh_memory()
 
-    def _handle_corrupted_session(self):
-        """Rename corrupted session file"""
-        corrupted_path = self.session_path + ".corrupted"
+    def _attempt_partial_recovery(self) -> Optional[dict]:
+        """
+        Attempt to extract partial data from corrupted JSON.
+        Returns dict with any recoverable data, or None.
+        """
+        try:
+            with open(self.session_path, "r") as f:
+                content = f.read()
+
+            # Strategy 1: Try to parse even with trailing commas (common JSON corruption)
+            content_fixed = re.sub(r",\s*}", "}", content)
+            content_fixed = re.sub(r",\s*]", "]", content_fixed)
+
+            try:
+                return json.loads(content_fixed)
+            except json.JSONDecodeError:
+                pass
+
+            # Strategy 2: Try to find and extract just the conversation
+            conversation_match = re.search(
+                r'"conversation"\s*:\s*(\{[^}]*"messages"\s*:\s*\[[^\]]*\][^}]*\})',
+                content,
+                re.DOTALL,
+            )
+
+            if conversation_match:
+                try:
+                    conv_json = conversation_match.group(1)
+                    return {"conversation": json.loads(conv_json)}
+                except Exception:
+                    pass
+
+            # Strategy 3: Try to extract any valid JSON objects
+            try:
+                # Find the outermost braces
+                start = content.find("{")
+                end = content.rfind("}")
+                if start != -1 and end != -1 and end > start:
+                    potential_json = content[start : end + 1]
+                    return json.loads(potential_json)
+            except Exception:
+                pass
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Partial recovery failed: {e}")
+            return None
+
+    def _rename_corrupted_session(self):
+        """Rename corrupted session with timestamp"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        corrupted_path = f"{self.session_path}.corrupted.{timestamp}"
+
         try:
             os.rename(self.session_path, corrupted_path)
             logger.warning(f"Renamed corrupted session to {corrupted_path}")
+            print(f"   Corrupted file saved as: {os.path.basename(corrupted_path)}")
         except Exception as e:
             logger.error(f"Failed to rename corrupted session: {e}")
+
+    def _cleanup_temp_files(self):
+        """Remove any stale .tmp files from sessions directory"""
+        try:
+            if not os.path.exists(self.SESSIONS_DIR):
+                return
+
+            for filename in os.listdir(self.SESSIONS_DIR):
+                if filename.endswith(".tmp"):
+                    tmp_path = os.path.join(self.SESSIONS_DIR, filename)
+                    try:
+                        # Check file age - only delete if > 1 hour old
+                        file_age = time.time() - os.path.getmtime(tmp_path)
+                        if file_age > 3600:  # 1 hour
+                            os.remove(tmp_path)
+                            logger.info(f"Cleaned up stale temp file: {filename}")
+                    except Exception as e:
+                        logger.error(f"Failed to cleanup {filename}: {e}")
+
+        except Exception as e:
+            logger.error(f"Failed to cleanup temp files: {e}")
 
     # === User Profile Management ===
 
@@ -226,6 +392,9 @@ class AgentMemory:
                 return UserProfile.model_validate(data)
             except Exception as e:
                 logger.error(f"Failed to load user profile: {e}")
+                print(
+                    f"\n  Warning: Could not load user profile ({e}). Using defaults."
+                )
                 return UserProfile()
         else:
             # Create default profile
@@ -276,6 +445,10 @@ class AgentMemory:
 
         for filename in os.listdir(sessions_dir):
             if filename.endswith(".json") and not filename.endswith(".corrupted"):
+                # Skip .tmp files too
+                if filename.endswith(".tmp"):
+                    continue
+
                 filepath = os.path.join(sessions_dir, filename)
                 try:
                     with open(filepath, "r") as f:
