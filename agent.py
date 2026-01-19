@@ -4,14 +4,16 @@ from models import State, Question, Plan, Feedback
 
 
 class Agent:
-    def __init__(self, session_date=None, force_new=False):
+    def __init__(self, session_date=None, force_new=False, revise=False):
         """
         Initialize the agent.
 
         Args:
             session_date: Date for session in YYYY-MM-DD format (defaults to today)
             force_new: If True, ignore existing session and start fresh
+            revise: If True, reopen a 'done' session for revision
         """
+        self.revise = revise
         # Initialize memory (handles loading/creating session)
         self.memory = AgentMemory(session_date=session_date, force_new=force_new)
         self.llm = LLMClient()
@@ -62,11 +64,28 @@ class Agent:
             print("\n🔄 Continuing with feedback...\n")
 
         elif current_state == State.done:
-            print("✅ This session was already completed.\n")
-            plan = self.memory.get("plan")
-            if plan:
-                self._display_plan(plan)
-            print()
+            # Handle revision mode
+            if self.revise:
+                print("🔄 Revision mode - reopening your finalized plan...\n")
+                plan = self.memory.get("plan")
+                if plan:
+                    self._display_plan(plan)
+                else:
+                    print("❌ Error: No plan found. Session may be corrupted.")
+                    return
+
+                print("\n📝 What would you like to change?\n")
+
+                # Transition back to feedback state
+                self.memory.set("state", State.feedback)
+            else:
+                # Normal resume of done session (display and exit)
+                print("✅ This session was already completed.\n")
+                plan = self.memory.get("plan")
+                if plan:
+                    self._display_plan(plan)
+                print("\n💡 Tip: Use --revise to modify this plan")
+                print()
 
     def _get_user_goal(self) -> str:
         """Get the user's goal/input"""

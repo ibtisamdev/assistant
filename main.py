@@ -1,4 +1,6 @@
 import argparse
+import json
+import os
 from datetime import datetime
 from agent import Agent
 from dotenv import load_dotenv
@@ -23,6 +25,12 @@ def parse_arguments():
 
     parser.add_argument(
         "--list", action="store_true", help="List all saved sessions and exit"
+    )
+
+    parser.add_argument(
+        "--revise",
+        action="store_true",
+        help="Revise today's finalized plan (re-enter feedback state)",
     )
 
     return parser.parse_args()
@@ -64,6 +72,44 @@ def main():
         list_sessions()
         return
 
+    # Handle --revise flag validation
+    if args.revise:
+        # Error: Can't use with --new
+        if args.new:
+            print("❌ Error: Cannot use --revise with --new")
+            return
+
+        # Error: Can't use with --date
+        if args.date:
+            print("❌ Error: --revise only works for today's session")
+            print("   Tip: Run without --date to revise today's plan")
+            return
+
+        # Check if today's session exists
+        today = datetime.now().strftime("%Y-%m-%d")
+        session_path = os.path.join(AgentMemory.SESSIONS_DIR, f"{today}.json")
+
+        if not os.path.exists(session_path):
+            print(f"❌ Error: No session found for today ({today})")
+            print("   Tip: Create a plan first, then use --revise to modify it")
+            return
+
+        # Check if session is in 'done' state
+        try:
+            with open(session_path, "r") as f:
+                data = json.load(f)
+            current_state = data["agent_state"]["state"]
+
+            if current_state != "done":
+                print(
+                    f"⚠️  Warning: Today's session isn't finalized (state: {current_state})"
+                )
+                print("   Resuming session normally...")
+                # Don't return - just continue with normal resume
+        except Exception as e:
+            print(f"❌ Error: Failed to read session: {e}")
+            return
+
     # Determine session date
     session_date = args.date if args.date else None
 
@@ -83,7 +129,7 @@ def main():
     print("=" * 60)
 
     # Initialize agent (will auto-resume if session exists, unless --new)
-    agent = Agent(session_date=session_date, force_new=args.new)
+    agent = Agent(session_date=session_date, force_new=args.new, revise=args.revise)
 
     # Run the agent
     try:
