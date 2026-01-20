@@ -8,6 +8,48 @@ This is a **Daily Planning AI Agent** - an agentic system that helps users creat
 
 **Architecture:** Agent Control Loop → LLM Client (OpenAI) → Memory (State Store)
 
+## Versioning Policy
+
+This project follows [Semantic Versioning](https://semver.org/) (SemVer):
+
+**Version Format:** `MAJOR.MINOR.PATCH` (e.g., `0.2.0`)
+
+**Version Bumps:**
+- **MAJOR** (x.0.0): Breaking changes to the API or CLI interface
+- **MINOR** (0.x.0): New features, significant additions (backwards compatible)
+- **PATCH** (0.0.x): Bug fixes, small improvements, documentation updates
+
+**Pre-1.0 Development:**
+- Current phase: `0.x.x` (API may change)
+- Version `1.0.0` will be released when core features are stable and ready for production use
+- Likely milestone: After Priorities 4-5 from ROADMAP.md are complete
+
+**Version History:**
+- `v0.1.0` (2026-01-17): Initial monolithic implementation
+- `v0.2.0` (2026-01-20): Production-ready refactor with clean architecture
+
+**When to Bump Version:**
+
+Manual release-based versioning - bump when ready to release, not tied to individual commits.
+
+**Suggested Future Milestones:**
+- `v0.3.0`: Priority 2 (Time Tracking) complete
+- `v0.4.0`: Priority 3 (Export & Review) complete
+- `v0.5.0`: Priority 4 (Productivity Metrics) complete
+- `v1.0.0`: Core features stable, ready for production
+
+**Release Process:**
+
+1. **Decide version bump** based on changes (patch/minor/major)
+2. **Update `pyproject.toml`** with new version number
+3. **Update `CHANGELOG.md`** with changes under new version heading
+4. **Update README.md** version badge if needed
+5. **Commit**: `git commit -m "chore: Bump version to vX.X.X"`
+6. **Tag**: `git tag -a vX.X.X -m "Release vX.X.X: <description>"`
+7. **Push**: `git push && git push --tags`
+
+See `CHANGELOG.md` for detailed version history.
+
 ## Development Commands
 
 ### Setup
@@ -277,13 +319,61 @@ response = self.client.responses.parse(
 result = response.output[0].content[0].parsed
 ```
 
-## Environment Variables
+## Configuration Loading
+
+The application uses a **hybrid configuration approach** following production best practices:
+
+### Loading Mechanism
+
+1. **Explicit `.env` loading** via `python-dotenv`
+2. **Pydantic Settings** for validation and type safety
+3. **YAML config** for non-sensitive defaults
+
+### Priority Order (highest to lowest):
+
+```
+Environment variables → .env file → YAML config → Code defaults
+```
+
+### How It Works
+
+```python
+# src/application/config.py
+@classmethod
+def load(cls, env_file: Optional[Path] = None, yaml_file: Optional[Path] = None):
+    # 1. Load .env file into os.environ
+    load_dotenv(env_path, override=False)
+    
+    # 2. Load YAML defaults
+    yaml_config = yaml.safe_load(...)
+    
+    # 3. Pydantic Settings reads from os.environ + YAML
+    config = cls(**yaml_config)
+    
+    # 4. Validate required values
+    if not config.llm.api_key:
+        raise ValueError("...")
+```
+
+### Why This Approach?
+
+- ✅ **Industry standard** - Used by FastAPI, Django, Airflow
+- ✅ **Explicit > Implicit** - Clear control flow
+- ✅ **Production-ready** - Works with CI/CD and containers
+- ✅ **12-factor app compliant** - Environment-based config
+- ✅ **Recommended by Pydantic** - Official best practice
+
+### Environment Variables
 
 Required in `.env`:
 
-```
+```env
 OPENAI_API_KEY=your_key_here
 ```
+
+### Troubleshooting
+
+See `docs/configuration.md` for detailed troubleshooting guide.
 
 ## Git Conventions
 

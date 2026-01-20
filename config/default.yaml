@@ -1,0 +1,39 @@
+environment: development
+debug: true
+log_level: INFO
+
+llm:
+  provider: openai
+  model: gpt-4o-mini
+  timeout: 60.0
+  temperature: 0.7
+
+retry:
+  max_attempts: 3
+  base_delay: 1.0
+  max_delay: 60.0
+  exponential_base: 2.0
+  rate_limit_multiplier: 2.0
+
+storage:
+  backend: json
+  sessions_dir: sessions
+  profiles_dir: profiles
+  cache_ttl: 300
+  enable_compression: false
+
+input:
+  max_goal_length: 1000
+  max_feedback_length: 1000
+  max_answer_length: 500
+
+session:
+  auto_save: true
+  save_debounce_ms: 500
+  max_conversation_messages: 100
+  cleanup_temp_files_older_than_hours: 1
+
+# Feature flags
+enable_multi_agent: false
+enable_export: false
+enable_calendar_sync: false

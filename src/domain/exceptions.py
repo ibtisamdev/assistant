@@ -1,0 +1,49 @@
+"""Domain-specific exceptions."""
+
+
+class DomainException(Exception):
+    """Base domain exception."""
+
+    pass
+
+
+class InvalidStateTransition(DomainException):
+    """Invalid state machine transition."""
+
+    pass
+
+
+class InvalidPlan(DomainException):
+    """Plan validation failed."""
+
+    pass
+
+
+class SessionNotFound(DomainException):
+    """Session does not exist."""
+
+    pass
+
+
+class ProfileNotFound(DomainException):
+    """User profile not found."""
+
+    pass
+
+
+class QuestionValidationError(DomainException):
+    """Question validation failed."""
+
+    pass
+
+
+class LLMError(DomainException):
+    """LLM-related errors."""
+
+    pass
+
+
+class StorageError(DomainException):
+    """Storage-related errors."""
+
+    pass
