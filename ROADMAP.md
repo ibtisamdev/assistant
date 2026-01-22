@@ -35,6 +35,53 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
 - [ ] Import yesterday's incomplete tasks
   - Auto-suggest unfinished tasks from previous day
 
+### Priority 6: Testing & CI/CD (v1.0 Release Gate)
+Production readiness testing infrastructure and quality gates.
+
+#### Phase 1: Test Infrastructure
+- [ ] Create `tests/conftest.py` with shared fixtures
+- [ ] Add CI/CD pipeline (`.github/workflows/test.yml`)
+- [ ] Configure coverage reporting (pytest-cov + badge)
+- [ ] Add pre-commit hook for fast tests
+
+#### Phase 2: Unit Tests - Core Business Logic
+- [x] StateMachine - `test_state_machine.py` (9 tests)
+- [x] PlanningService - `test_planning_service.py` (5 tests)
+- [x] TimeTrackingService - `test_time_tracking_service.py` (27 tests)
+- [x] ExportService - `test_export_service.py` (18 tests)
+- [ ] **AgentService** - `test_agent_service.py` (Critical)
+- [ ] **Domain Models** - `test_models.py` (validation, computed properties)
+- [ ] **CreatePlanUseCase** - `test_create_plan.py`
+- [ ] **CheckinUseCase** - `test_checkin.py`
+
+#### Phase 3: Infrastructure Tests
+- [x] MockStorage - `test_storage.py` (4 tests)
+- [x] Markdown/Summary Exporters - `test_export.py` (30 tests)
+- [ ] **JSONStorage** - `test_json_storage.py` (real file I/O)
+- [ ] **OpenAIProvider** - `test_openai_provider.py` (mocked API)
+- [ ] **RetryStrategy** - `test_retry.py`
+- [ ] **StorageCache** - `test_cache.py`
+
+#### Phase 4: Integration Tests
+- [ ] Full planning workflow (goal → questions → plan → feedback → done)
+- [ ] Session persistence (create, save, reload, continue)
+- [ ] Time tracking workflow (checkin → progress update → summary)
+- [ ] Export workflow (session → markdown file)
+
+#### Phase 5: CLI Smoke Tests
+- [ ] `day start` - basic smoke test
+- [ ] `day list` - session listing
+- [ ] `day show <date>` - plan display
+- [ ] `day checkin` - time tracking
+- [ ] `day export` - file generation
+
+#### Phase 6: Quality Gates (v1.0 Release Criteria)
+- [ ] Unit test coverage ≥80%
+- [ ] All tests pass (100%)
+- [ ] No ruff lint errors
+- [ ] No mypy type errors
+- [ ] CI passes on all PRs
+
 ### Future: Advanced Features
 - [ ] Calendar integration (Google Calendar read-only)
 - [ ] Notifications for task transitions
