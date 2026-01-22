@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Optional, List
 
 from .state import State
@@ -97,6 +97,16 @@ class Session(BaseModel):
     Only used for parsing LLM responses.
     """
 
-    plan: Plan = Field(description="The plan of the day")
+    plan: Optional[Plan] = Field(
+        default=None, description="The plan of the day (optional in questions state)"
+    )
     questions: List[str] = Field(description="Clarifying questions for the user")
     state: State = Field(description="Next state the agent should transition to")
+
+    @model_validator(mode="after")
+    def validate_plan_by_state(self) -> "Session":
+        """Ensure plan exists when state requires it."""
+        if self.state in [State.feedback, State.done]:
+            if self.plan is None:
+                raise ValueError(f"Plan is required when state is {self.state.value}")
+        return self

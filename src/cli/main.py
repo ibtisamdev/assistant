@@ -116,6 +116,50 @@ def list(ctx):
     asyncio.run(_list())
 
 
+@cli.command()
+@click.option("--date", help="Session date (defaults to today)")
+@click.option("--start", help="Quick start task by name")
+@click.option("--complete", help="Quick complete task by name")
+@click.option("--skip", help="Quick skip task by name")
+@click.option("--status", is_flag=True, help="Show progress status only")
+@click.pass_context
+def checkin(ctx, date, start, complete, skip, status):
+    """Check in and track task progress (shortcut)."""
+    from datetime import datetime
+    from ..application.use_cases.checkin import CheckinUseCase
+    from ..domain.exceptions import SessionNotFound
+
+    container = ctx.obj["container"]
+    use_case = CheckinUseCase(container)
+
+    # Default to today
+    session_id = date or datetime.now().strftime("%Y-%m-%d")
+
+    async def _checkin():
+        try:
+            await use_case.execute(
+                session_id=session_id,
+                quick_start=start,
+                quick_complete=complete,
+                quick_skip=skip,
+                show_status_only=status,
+            )
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint(f"[dim]Hint: Create a plan first with 'uv run plan start'[/dim]")
+        except KeyboardInterrupt:
+            rprint("\n[yellow]Check-in cancelled.[/yellow]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_checkin())
+    except KeyboardInterrupt:
+        pass
+
+
 # Import command groups
 from .commands.plan import plan_group
 from .commands.session import session_group

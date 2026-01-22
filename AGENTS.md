@@ -12,30 +12,32 @@ This is a **Daily Planning AI Agent** - an agentic system that helps users creat
 
 This project follows [Semantic Versioning](https://semver.org/) (SemVer):
 
-**Version Format:** `MAJOR.MINOR.PATCH` (e.g., `0.2.0`)
+**Version Format:** `MAJOR.MINOR.PATCH` (e.g., `0.1.3`)
 
 **Version Bumps:**
 - **MAJOR** (x.0.0): Breaking changes to the API or CLI interface
-- **MINOR** (0.x.0): New features, significant additions (backwards compatible)
-- **PATCH** (0.0.x): Bug fixes, small improvements, documentation updates
+- **MINOR** (0.x.0): Reserved for v1.0.0 release
+- **PATCH** (0.1.x): New features, bug fixes, improvements (pre-1.0 development)
 
 **Pre-1.0 Development:**
-- Current phase: `0.x.x` (API may change)
+- Current phase: `0.1.x` (API may change)
 - Version `1.0.0` will be released when core features are stable and ready for production use
 - Likely milestone: After Priorities 4-5 from ROADMAP.md are complete
 
 **Version History:**
 - `v0.1.0` (2026-01-17): Initial monolithic implementation
-- `v0.2.0` (2026-01-20): Production-ready refactor with clean architecture
+- `v0.1.1` (2026-01-19): Stability improvements (Priority 1)
+- `v0.1.2` (2026-01-20): Production-ready refactor with clean architecture
+- `v0.1.3` (2026-01-21): Time tracking system (Priority 2)
 
 **When to Bump Version:**
 
 Manual release-based versioning - bump when ready to release, not tied to individual commits.
 
 **Suggested Future Milestones:**
-- `v0.3.0`: Priority 2 (Time Tracking) complete
-- `v0.4.0`: Priority 3 (Export & Review) complete
-- `v0.5.0`: Priority 4 (Productivity Metrics) complete
+- `v0.1.4`: Priority 3 (Export & Review) complete
+- `v0.1.5`: Priority 4 (Productivity Metrics) complete
+- `v0.1.6`: Priority 5 (Workflow Integration) complete
 - `v1.0.0`: Core features stable, ready for production
 
 **Release Process:**

@@ -13,6 +13,9 @@ class PlanningService:
         """
         Validate plan completeness and consistency.
 
+        NOTE: This should only be called when a plan exists.
+        Use `if session.plan: validate_plan(session.plan)` pattern.
+
         Raises:
             InvalidPlan: If validation fails
         """
@@ -102,3 +105,36 @@ Total scheduled time: {duration} minutes ({duration // 60}h {duration % 60}m)"""
             pass
 
         return suggestions
+
+    def populate_time_estimates(self, plan: Plan) -> Plan:
+        """
+        Populate estimated_minutes for schedule items from their time ranges.
+        This is a fallback if LLM doesn't provide estimates.
+        """
+        for item in plan.schedule:
+            if item.estimated_minutes is None:
+                # Use duration from time range as estimate
+                item.estimated_minutes = item.extract_duration()
+
+        # Update plan's estimated duration
+        plan.calculate_total_duration()
+        return plan
+
+    def validate_tracking_data(self, plan: Plan) -> Tuple[bool, List[str]]:
+        """
+        Validate tracking data consistency across all tasks.
+
+        Returns:
+            Tuple of (is_valid, list_of_warnings)
+        """
+        from .time_tracking_service import TimeTrackingService
+
+        tracking_service = TimeTrackingService()
+        all_warnings = []
+
+        for item in plan.schedule:
+            warnings = tracking_service.validate_tracking_consistency(item)
+            if warnings:
+                all_warnings.extend([f"{item.task}: {warning}" for warning in warnings])
+
+        return len(all_warnings) == 0, all_warnings

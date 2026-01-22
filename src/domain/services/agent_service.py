@@ -138,6 +138,8 @@ class AgentService:
             except Exception as e:
                 logger.error(f"Plan validation failed: {e}")
                 # Still accept the plan but log the issue
+        else:
+            logger.debug(f"No plan provided in state {session.state.value}")
 
         return AgentState(
             state=new_state,
@@ -154,7 +156,11 @@ class AgentService:
             return f"I have {len(session.questions)} clarifying questions:\n{questions_text}"
 
         elif session.state == State.feedback:
-            return self.planning.format_plan_summary(session.plan)
+            if session.plan:
+                return self.planning.format_plan_summary(session.plan)
+            else:
+                logger.warning("No plan provided in feedback state")
+                return "Preparing your plan..."
 
         elif session.state == State.done:
             return "Your plan is finalized! Have a productive day!"

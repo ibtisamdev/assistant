@@ -7,21 +7,9 @@ A comprehensive **AI planning assistant** that helps you create realistic daily 
 Enhance the assistant with robust time tracking and analytics capabilities to understand where time goes, compare planned vs actual, and drive continuous improvement.
 
 ## In Progress
-- [ ] Priority 2: Data Collection Core (TIME TRACKING) - see below
+- None currently
 
 ## Up Next
-
-### Priority 2: Data Collection Core (TIME TRACKING)
-- [ ] Check-in system - `python main.py --checkin`
-  - Shows today's plan
-  - Mark tasks as started/completed with timestamps
-  - Record actual time spent on each task
-- [ ] Time estimation - Add estimated duration to plan
-  - LLM suggests time estimates for each task
-  - Store in session data
-- [ ] Actual vs Planned tracking
-  - Compare estimated vs actual time
-  - Track which tasks took longer/shorter than planned
 
 ### Priority 3: Export & Review
 - [ ] Markdown export - `python main.py --export`
@@ -67,6 +55,33 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
 - [ ] Web UI for better visualization
 
 ## Completed
+
+### Priority 2: Data Collection Core (TIME TRACKING) - Completed 2026-01-21
+- [x] **Check-in system** - `uv run plan checkin`
+  - Interactive menu with 7 options (view, start, complete, skip, stats, edit, exit)
+  - Quick action flags: `--start`, `--complete`, `--skip`, `--status`
+  - Shows today's plan with progress indicators
+  - Mark tasks as started/completed with timestamps
+  - Record actual time spent on each task
+  - Audit trail for manual time adjustments
+- [x] **Time estimation** - Automatic duration estimates
+  - LLM suggests realistic time estimates for each task (with 20-30% buffer)
+  - Stored in `estimated_minutes` field
+  - Fallback estimation from time ranges
+  - Enhanced system prompt with estimation rules
+- [x] **Actual vs Planned tracking**
+  - Compare estimated vs actual time with variance calculation
+  - Color-coded variance display (green/yellow/red)
+  - Track which tasks took longer/shorter than planned
+  - Completion statistics and accuracy metrics
+  - Visual progress bar and detailed analytics
+
+**Key Features:**
+- TaskStatus enum (not_started, in_progress, completed, skipped)
+- TimeTrackingService with comprehensive business logic
+- Enhanced formatters with progress visualization
+- 29 new tests (all passing)
+- Full backward compatibility
 
 ### Priority 1: Stability for Daily Use (Completed 2026-01-19)
 - [x] **API Error Handling** - Comprehensive retry logic with exponential backoff

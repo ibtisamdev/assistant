@@ -1,23 +1,14 @@
 # Personal Assistant
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.1.3-blue)](CHANGELOG.md)
 [![Python](https://img.shields.io/badge/python-3.12+-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A production-ready AI planning agent that helps you create realistic daily plans through interactive conversation. Built with clean architecture, async-first design, and extensibility in mind.
 
-> **Note:** This project is in active development (v0.2.0). The API may change until v1.0.0 release.
-
-## ✨ What's New in v0.2.0
-
-**Major Architectural Improvements:**
-- 🏗️ Clean architecture with domain-driven design
-- ⚡ Fully async/await infrastructure for better performance
-- 🔌 Protocol-based design for extensibility (swap LLM providers, storage backends)
-- 🎨 Beautiful CLI with Rich formatting
-- 📦 Modular structure with clear separation of concerns
-- 🧪 Comprehensive test infrastructure
-- 🚀 Production-ready with proper error handling and logging
+> **Note:** This project is in active development (v0.1.x). The API may change until v1.0.0 release.
+> 
+> **Latest Release:** v0.1.3 - Time tracking and progress monitoring ([see changelog](CHANGELOG.md))
 
 ## 🎯 Features
 
@@ -29,13 +20,18 @@ A production-ready AI planning agent that helps you create realistic daily plans
 - User profile support for personalized planning
 - Beautiful terminal UI with colors and tables
 - Async operations for responsiveness
+- Time tracking with interactive check-ins
+- Automatic time estimation by LLM
+- Progress monitoring and analytics
+- Actual vs planned variance tracking
+- Manual time editing with audit trail
 
 **Coming Soon:**
 - Export to Markdown, PDF, iCal
+- Daily summary reports
 - SQLite storage backend
 - Multi-agent coordination
 - Calendar integration
-- Time tracking
 
 ## 🚀 Quick Start
 
@@ -74,6 +70,12 @@ uv run plan plan revise
 
 # View a saved plan
 uv run plan plan show 2026-01-19
+
+# Time tracking
+uv run plan checkin                      # Interactive check-in
+uv run plan checkin --start "Task name"  # Quick start
+uv run plan checkin --complete "Task"    # Quick complete
+uv run plan checkin --status             # View progress
 
 # Session management
 uv run plan session list

@@ -104,3 +104,47 @@ def export_plan(ctx, date, format, output):
     rprint("[yellow]📦 Export feature coming soon![/yellow]")
     rprint(f"[dim]  Will export {date} to {format} format[/dim]")
     # TODO: Implement when export infrastructure is ready
+
+
+@plan_group.command(name="checkin")
+@click.option("--date", help="Session date (defaults to today)")
+@click.option("--start", help="Quick start task by name")
+@click.option("--complete", help="Quick complete task by name")
+@click.option("--skip", help="Quick skip task by name")
+@click.option("--status", is_flag=True, help="Show progress status only")
+@click.pass_context
+def checkin(ctx, date, start, complete, skip, status):
+    """Check in and track task progress."""
+    from datetime import datetime
+    from ...application.use_cases.checkin import CheckinUseCase
+    from ...domain.exceptions import SessionNotFound
+
+    container = ctx.obj["container"]
+    use_case = CheckinUseCase(container)
+
+    # Default to today
+    session_id = date or datetime.now().strftime("%Y-%m-%d")
+
+    async def _checkin():
+        try:
+            await use_case.execute(
+                session_id=session_id,
+                quick_start=start,
+                quick_complete=complete,
+                quick_skip=skip,
+                show_status_only=status,
+            )
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint(f"[dim]Hint: Create a plan first with 'uv run plan create'[/dim]")
+        except KeyboardInterrupt:
+            rprint("\n[yellow]Check-in cancelled.[/yellow]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_checkin())
+    except KeyboardInterrupt:
+        pass

@@ -6,6 +6,7 @@ from .config import AppConfig
 from ..domain.services.state_machine import StateMachine
 from ..domain.services.planning_service import PlanningService
 from ..domain.services.agent_service import AgentService
+from ..domain.services.time_tracking_service import TimeTrackingService
 from ..infrastructure.llm.openai_provider import OpenAIProvider
 from ..infrastructure.llm.retry import RetryStrategy
 from ..infrastructure.storage.json_storage import JSONStorage
@@ -31,6 +32,7 @@ class Container:
         self._plan_formatter: Optional[PlanFormatter] = None
         self._session_formatter: Optional[SessionFormatter] = None
         self._progress_formatter: Optional[ProgressFormatter] = None
+        self._time_tracking_service: Optional[TimeTrackingService] = None
 
     @property
     def llm_provider(self) -> OpenAIProvider:
@@ -121,3 +123,10 @@ class Container:
         if not self._progress_formatter:
             self._progress_formatter = ProgressFormatter()
         return self._progress_formatter
+
+    @property
+    def time_tracking_service(self) -> TimeTrackingService:
+        """Get time tracking service."""
+        if not self._time_tracking_service:
+            self._time_tracking_service = TimeTrackingService()
+        return self._time_tracking_service

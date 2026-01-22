@@ -1,12 +1,13 @@
 """Rich-formatted output."""
 
-from typing import List
+from typing import List, Dict
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
+from rich.progress import Progress, BarColumn, TextColumn
 from rich import box
-from ...domain.models.planning import Plan, Question
+from ...domain.models.planning import Plan, Question, TaskStatus, ScheduleItem
 from ...domain.models.state import State
 
 console = Console()
@@ -92,6 +93,191 @@ Top Priorities:
 Notes: {plan.notes}
 
 What do you think? Any changes needed?"""
+
+    @staticmethod
+    def format_plan_with_progress(plan: Plan) -> Table:
+        """
+        Format plan with progress tracking indicators.
+        Shows status, time tracking, and variance.
+        """
+        table = Table(
+            title="📋 Today's Plan with Progress",
+            show_header=True,
+            header_style="bold magenta",
+            box=box.ROUNDED,
+            padding=(0, 1),
+        )
+
+        table.add_column("Status", style="cyan", justify="center", width=6)
+        table.add_column("Time", style="blue", no_wrap=True, width=13)
+        table.add_column("Task", style="white")
+        table.add_column("Est.", justify="right", width=8)
+        table.add_column("Act.", justify="right", width=8)
+        table.add_column("Var.", justify="right", width=8)
+
+        for item in plan.schedule:
+            # Status icon with color
+            if item.status == TaskStatus.completed:
+                status = "[green]✓[/green]"
+            elif item.status == TaskStatus.in_progress:
+                status = "[yellow]►[/yellow]"
+            elif item.status == TaskStatus.skipped:
+                status = "[dim]⊗[/dim]"
+            else:
+                status = "[dim][ ][/dim]"
+
+            # Time estimates
+            est = f"{item.estimated_minutes}m" if item.estimated_minutes else "-"
+            act = f"{item.actual_minutes}m" if item.actual_minutes else "-"
+
+            # Variance with color coding
+            if item.time_variance is not None:
+                var = item.time_variance
+                if var > 10:
+                    var_str = f"[red]+{var}m[/red]"  # Significantly over
+                elif var > 0:
+                    var_str = f"[yellow]+{var}m[/yellow]"  # Slightly over
+                elif var < -10:
+                    var_str = f"[green]{var}m[/green]"  # Significantly under
+                else:
+                    var_str = f"[dim]{var}m[/dim]"  # Slightly under
+            else:
+                var_str = "[dim]-[/dim]"
+
+            # Task name - dim if completed or skipped
+            task_style = (
+                "dim" if item.status in [TaskStatus.completed, TaskStatus.skipped] else "white"
+            )
+            task_text = f"[{task_style}]{item.task}[/{task_style}]"
+
+            table.add_row(status, item.time, task_text, est, act, var_str)
+
+        return table
+
+    @staticmethod
+    def format_progress_stats(stats: Dict) -> Panel:
+        """
+        Format detailed progress statistics.
+
+        Args:
+            stats: Dictionary from TimeTrackingService.get_completion_stats()
+        """
+        # Calculate completion bar
+        completion_rate = stats["completion_rate"]
+        bar_width = 30
+        filled = int(bar_width * completion_rate / 100)
+        bar = "█" * filled + "░" * (bar_width - filled)
+
+        # Color code the bar
+        if completion_rate >= 80:
+            bar_color = "green"
+        elif completion_rate >= 50:
+            bar_color = "yellow"
+        else:
+            bar_color = "red"
+
+        # Format time variance
+        avg_var = stats["average_variance"]
+        if avg_var > 10:
+            var_color = "red"
+            var_status = "⚠ Underestimating"
+        elif avg_var < -10:
+            var_color = "green"
+            var_status = "✓ Overestimating (good buffer!)"
+        else:
+            var_color = "cyan"
+            var_status = "✓ Accurate estimates"
+
+        content = f"""
+[bold]Task Progress[/bold]
+[{bar_color}]{bar}[/{bar_color}] {completion_rate}%
+
+[bold]Task Status[/bold]
+  ✓ Completed:    {stats["completed"]}
+  ► In Progress:  {stats["in_progress"]}
+  • Not Started:  {stats["not_started"]}
+  ⊗ Skipped:      {stats["skipped"]}
+  ─────────────
+  📊 Total:       {stats["total_tasks"]}
+
+[bold]Time Tracking[/bold]
+  Estimated:      {stats["estimated_total"]} minutes
+  Actual:         {stats["actual_total"]} minutes
+  Variance:       [{var_color}]{stats["total_variance"]:+d} minutes[/{var_color}]
+  Avg per task:   [{var_color}]{avg_var:+.1f} minutes[/{var_color}]
+  
+[bold]Accuracy[/bold]
+  {var_status}
+"""
+
+        return Panel(
+            content.strip(),
+            title="[bold cyan]📊 Progress Statistics[/bold cyan]",
+            border_style="cyan",
+            padding=(1, 2),
+        )
+
+    @staticmethod
+    def format_time_comparison_table(plan: Plan) -> Table:
+        """
+        Format detailed time comparison table for completed tasks.
+        """
+        table = Table(
+            title="⏱️  Estimated vs Actual Time",
+            show_header=True,
+            header_style="bold magenta",
+            box=box.ROUNDED,
+        )
+
+        table.add_column("Task", style="white")
+        table.add_column("Estimated", justify="right", style="cyan")
+        table.add_column("Actual", justify="right", style="blue")
+        table.add_column("Variance", justify="right")
+        table.add_column("Accuracy", justify="center")
+
+        completed_tasks = [item for item in plan.schedule if item.is_completed]
+
+        if not completed_tasks:
+            return table
+
+        for item in completed_tasks:
+            est = item.estimated_minutes or 0
+            act = item.actual_minutes or 0
+            var = item.time_variance or 0
+
+            # Calculate accuracy percentage
+            if est > 0:
+                accuracy = 100 - (abs(var) / est * 100)
+                accuracy_str = f"{accuracy:.0f}%"
+
+                # Color code accuracy
+                if accuracy >= 90:
+                    accuracy_color = "green"
+                elif accuracy >= 70:
+                    accuracy_color = "yellow"
+                else:
+                    accuracy_color = "red"
+            else:
+                accuracy_str = "N/A"
+                accuracy_color = "dim"
+
+            # Variance with color
+            if var > 0:
+                var_str = f"[red]+{var}m[/red]"
+            elif var < 0:
+                var_str = f"[green]{var}m[/green]"
+            else:
+                var_str = "[cyan]0m[/cyan]"
+
+            table.add_row(
+                item.task,
+                f"{est}m",
+                f"{act}m",
+                var_str,
+                f"[{accuracy_color}]{accuracy_str}[/{accuracy_color}]",
+            )
+
+        return table
 
 
 class SessionFormatter:

@@ -29,10 +29,16 @@ class MockLLMProvider:
 
         # Return a mock Session object
         if schema.__name__ == "Session":
+            state = self.responses.get("state", State.done)
+            # Provide a plan for states that require it
+            plan = self.responses.get("plan")
+            if plan is None and state in [State.feedback, State.done]:
+                plan = PlanFactory.create()
+
             return Session(
-                plan=self.responses.get("plan", PlanFactory.create()),
+                plan=plan,
                 questions=self.responses.get("questions", []),
-                state=self.responses.get("state", State.done),
+                state=state,
             )
 
         # Default: return empty instance
