@@ -11,20 +11,6 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
 
 ## Up Next
 
-### Priority 4: Productivity Metrics
-- [ ] Time categorization
-  - Tag tasks as: productive, meetings, admin, breaks, wasted
-  - LLM can suggest categories, user confirms
-  - Track in session data
-- [ ] Daily stats command - `day stats [date]`
-  - Total productive time vs wasted time
-  - Task completion rate
-  - Most time-consuming activities
-  - Estimated vs actual accuracy
-- [ ] Weekly/monthly summaries
-  - Aggregate data across multiple days
-  - Identify patterns (productive times, common time sinks)
-
 ### Priority 5: Workflow Integration
 - [ ] Quick start mode - `day quick`
   - Skip questions if no changes from yesterday
@@ -82,6 +68,30 @@ Production readiness testing infrastructure and quality gates.
 - [ ] No mypy type errors
 - [ ] CI passes on all PRs
 
+### Priority 4 Future Enhancements
+- [ ] Markdown export of metrics - `day stats --export`
+  - Export daily/weekly/monthly stats to `data/metrics/`
+  - Include charts as ASCII art or embedded images
+- [ ] Graphs and visualizations
+  - Completion rate trend over time (line chart)
+  - Category distribution (pie chart)
+  - Time variance histogram
+  - Requires external library (e.g., plotext for terminal, matplotlib for export)
+- [ ] Period comparison - `day stats --compare`
+  - Compare current week vs last week
+  - Compare current month vs last month
+  - Show improvement/decline percentages
+  - Highlight significant changes
+- [ ] Productivity goals
+  - Set targets: "80% productive time", "90% completion rate"
+  - Track progress toward goals
+  - Celebrate achievements
+  - Command: `day goals` to set/view
+- [ ] Category customization
+  - User-defined categories beyond the defaults
+  - Category aliases ("deep work" → "productive")
+  - Profile setting for custom categories
+
 ### Future: Advanced Features
 - [ ] Calendar integration (Google Calendar read-only)
 - [ ] Notifications for task transitions
@@ -92,6 +102,43 @@ Production readiness testing infrastructure and quality gates.
 - [ ] Web UI for better visualization
 
 ## Completed
+
+### Priority 4: Productivity Metrics - Completed 2026-01-22
+- [x] **Time categorization**
+  - TaskCategory enum: productive, meetings, admin, breaks, wasted, uncategorized
+  - LLM auto-suggests categories during plan creation
+  - Users can edit categories via `day checkin` menu (option 7)
+  - Categories tracked in session data
+- [x] **Daily stats command** - `day stats [date]`
+  - Total productive time vs wasted time
+  - Task completion rate with visual progress bar
+  - Most time-consuming activities (top 5)
+  - Estimated vs actual accuracy metrics
+  - Color-coded category breakdown table
+- [x] **Weekly/monthly summaries**
+  - `day stats --week` - Current week summary (Monday-Sunday)
+  - `day stats --month` - Current month summary
+  - `day stats --from YYYY-MM-DD --to YYYY-MM-DD` - Custom date range
+  - Aggregate data across multiple days
+  - Pattern identification: time sinks, completion trends, consistent habits
+  - Best/worst day tracking
+
+**Key Features:**
+- MetricsService with comprehensive business logic (450+ lines)
+- DailyMetrics, AggregateMetrics, EstimationAccuracy models
+- MetricsFormatter with Rich-formatted display
+- ViewStatsUseCase and ViewAggregateStatsUseCase
+- Category editing in checkin workflow
+- System prompt updated with category assignment rules
+- 24 new tests for metrics service (all passing)
+- Full backward compatibility
+
+**Impact:**
+- Understand where time goes with category tracking
+- Compare planned vs actual performance
+- Identify productivity patterns over time
+- Make data-driven improvements to planning
+- Foundation for future goals and advanced insights
 
 ### Priority 3: Export & Review - Completed 2026-01-22
 - [x] **Markdown export** - `day export [DATE]`

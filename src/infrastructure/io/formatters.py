@@ -9,6 +9,7 @@ from rich.progress import Progress, BarColumn, TextColumn
 from rich import box
 from ...domain.models.planning import Plan, Question, TaskStatus, ScheduleItem
 from ...domain.models.state import State
+from ...domain.models.metrics import DailyMetrics, AggregateMetrics, EstimationAccuracy
 
 console = Console()
 
@@ -376,3 +377,403 @@ class ProgressFormatter:
     def print_info(message: str) -> None:
         """Print info message."""
         console.print(f"[bold blue]ℹ[/bold blue] {message}")
+
+
+class MetricsFormatter:
+    """Productivity metrics formatting."""
+
+    @staticmethod
+    def _format_minutes(minutes: int) -> str:
+        """Format minutes as hours and minutes."""
+        if minutes < 60:
+            return f"{minutes}m"
+        hours = minutes // 60
+        mins = minutes % 60
+        if mins == 0:
+            return f"{hours}h"
+        return f"{hours}h {mins}m"
+
+    @staticmethod
+    def format_daily_metrics(metrics: DailyMetrics) -> Panel:
+        """Format daily metrics as Rich panel."""
+        # Header stats
+        completion_bar_width = 30
+        filled = int(completion_bar_width * metrics.completion_rate / 100)
+        completion_bar = "█" * filled + "░" * (completion_bar_width - filled)
+
+        # Color based on completion rate
+        if metrics.completion_rate >= 80:
+            bar_color = "green"
+        elif metrics.completion_rate >= 50:
+            bar_color = "yellow"
+        else:
+            bar_color = "red"
+
+        # Time variance coloring
+        variance = metrics.time_variance
+        if variance > 30:
+            var_color = "red"
+            var_sign = "+"
+        elif variance > 0:
+            var_color = "yellow"
+            var_sign = "+"
+        elif variance < -30:
+            var_color = "green"
+            var_sign = ""
+        else:
+            var_color = "cyan"
+            var_sign = "" if variance < 0 else "+"
+
+        planned_str = MetricsFormatter._format_minutes(metrics.total_planned_minutes)
+        actual_str = MetricsFormatter._format_minutes(metrics.total_actual_minutes)
+        variance_str = MetricsFormatter._format_minutes(abs(variance))
+
+        # Build header section
+        header = f"""[bold]Completion Rate:[/bold] [{bar_color}]{completion_bar}[/{bar_color}] {metrics.completion_rate:.0f}%
+[bold]Tasks:[/bold] {metrics.completed_tasks}/{metrics.total_tasks} completed"""
+
+        if metrics.skipped_tasks > 0:
+            header += f", {metrics.skipped_tasks} skipped"
+        if metrics.in_progress_tasks > 0:
+            header += f", {metrics.in_progress_tasks} in progress"
+
+        header += f"""
+
+[bold]Time:[/bold] {planned_str} planned → {actual_str} actual ([{var_color}]{var_sign}{variance_str}[/{var_color}])"""
+
+        return Panel(
+            header,
+            title=f"[bold cyan]📊 Daily Stats: {metrics.date}[/bold cyan]",
+            border_style="cyan",
+            padding=(1, 2),
+        )
+
+    @staticmethod
+    def format_category_breakdown(metrics: DailyMetrics) -> Table:
+        """Format time by category as a table with distribution bars."""
+        table = Table(
+            title="Time by Category",
+            show_header=True,
+            header_style="bold magenta",
+            box=box.ROUNDED,
+            padding=(0, 1),
+        )
+
+        table.add_column("Category", style="cyan", width=12)
+        table.add_column("Time", justify="right", width=8)
+        table.add_column("Distribution", width=30)
+
+        # Calculate total for percentages
+        total_time = sum(metrics.time_by_category.values())
+
+        # Category colors
+        category_colors = {
+            "productive": "green",
+            "meetings": "blue",
+            "admin": "yellow",
+            "breaks": "cyan",
+            "wasted": "red",
+            "uncategorized": "dim",
+        }
+
+        # Sort categories by time (descending)
+        sorted_cats = sorted(metrics.time_by_category.items(), key=lambda x: x[1], reverse=True)
+
+        for category, minutes in sorted_cats:
+            if minutes == 0:
+                continue
+
+            percentage = (minutes / total_time * 100) if total_time > 0 else 0
+            bar_width = int(percentage / 100 * 20)
+            bar = "█" * bar_width
+
+            color = category_colors.get(category, "white")
+            time_str = MetricsFormatter._format_minutes(minutes)
+
+            table.add_row(
+                f"[{color}]{category.title()}[/{color}]",
+                time_str,
+                f"[{color}]{bar}[/{color}] {percentage:.0f}%",
+            )
+
+        return table
+
+    @staticmethod
+    def format_estimation_accuracy(accuracy: EstimationAccuracy) -> Panel:
+        """Format estimation accuracy section."""
+        # Determine overall accuracy status
+        if accuracy.tasks_within_15min_percent >= 80:
+            status_icon = "✓"
+            status_color = "green"
+            status_text = "Excellent estimation accuracy!"
+        elif accuracy.tasks_within_15min_percent >= 60:
+            status_icon = "•"
+            status_color = "yellow"
+            status_text = "Good accuracy, room for improvement"
+        else:
+            status_icon = "⚠"
+            status_color = "red"
+            status_text = "Estimates need calibration"
+
+        # Variance direction
+        if accuracy.avg_variance > 5:
+            direction = "Tasks took longer than planned"
+            direction_color = "yellow"
+        elif accuracy.avg_variance < -5:
+            direction = "Tasks finished faster than planned"
+            direction_color = "green"
+        else:
+            direction = "Estimates were accurate"
+            direction_color = "cyan"
+
+        content = f"""[{status_color}]{status_icon} {status_text}[/{status_color}]
+
+[bold]Metrics:[/bold]
+  • Average variance: [{direction_color}]{accuracy.avg_variance:+.0f} min[/{direction_color}] ({direction})
+  • Tasks within ±15 min: {accuracy.tasks_within_15min}/{accuracy.total_tasks_with_tracking} ({accuracy.tasks_within_15min_percent:.0f}%)
+  • Underestimated: {accuracy.underestimated_count} tasks
+  • Overestimated: {accuracy.overestimated_count} tasks"""
+
+        if accuracy.most_underestimated:
+            content += f'\n\n[bold]Most underestimated:[/bold] "{accuracy.most_underestimated}"'
+        if accuracy.most_overestimated:
+            content += f'\n[bold]Most overestimated:[/bold] "{accuracy.most_overestimated}"'
+
+        return Panel(
+            content,
+            title="[bold yellow]⏱️  Estimation Accuracy[/bold yellow]",
+            border_style="yellow",
+            padding=(1, 2),
+        )
+
+    @staticmethod
+    def format_top_consumers(metrics: DailyMetrics) -> Table:
+        """Format top time-consuming tasks."""
+        table = Table(
+            title="Top Time Consumers",
+            show_header=True,
+            header_style="bold magenta",
+            box=box.ROUNDED,
+            padding=(0, 1),
+        )
+
+        table.add_column("#", style="dim", width=3)
+        table.add_column("Task", style="white")
+        table.add_column("Category", style="cyan", width=12)
+        table.add_column("Time", justify="right", width=8)
+
+        for i, task in enumerate(metrics.top_time_consumers, 1):
+            time_val = task.actual_minutes or task.estimated_minutes or 0
+            time_str = MetricsFormatter._format_minutes(time_val)
+
+            # Status indicator
+            if task.status == "completed":
+                status = "[green]✓[/green]"
+            elif task.status == "in_progress":
+                status = "[yellow]►[/yellow]"
+            else:
+                status = "[dim]•[/dim]"
+
+            table.add_row(
+                f"{status} {i}",
+                task.task[:40] + "..." if len(task.task) > 40 else task.task,
+                task.category.title(),
+                time_str,
+            )
+
+        return table
+
+    @staticmethod
+    def format_aggregate_metrics(metrics: AggregateMetrics) -> Panel:
+        """Format aggregate metrics header panel."""
+        # Period description
+        if metrics.period_type == "week":
+            period_title = f"Weekly Summary: {metrics.period_start} to {metrics.period_end}"
+        elif metrics.period_type == "month":
+            period_title = f"Monthly Summary: {metrics.period_start} to {metrics.period_end}"
+        else:
+            period_title = f"Summary: {metrics.period_start} to {metrics.period_end}"
+
+        # Days tracked
+        days_str = f"{metrics.days_with_data} of {metrics.total_days} days tracked"
+
+        # Time summary
+        planned_str = MetricsFormatter._format_minutes(metrics.total_planned_minutes)
+        actual_str = MetricsFormatter._format_minutes(metrics.total_actual_minutes)
+        variance = metrics.total_actual_minutes - metrics.total_planned_minutes
+        var_sign = "+" if variance >= 0 else ""
+        var_str = MetricsFormatter._format_minutes(abs(variance))
+
+        avg_planned = MetricsFormatter._format_minutes(int(metrics.avg_daily_planned_minutes))
+        avg_actual = MetricsFormatter._format_minutes(int(metrics.avg_daily_actual_minutes))
+
+        # Completion rate bar
+        bar_width = 25
+        filled = int(bar_width * metrics.avg_completion_rate / 100)
+        bar = "█" * filled + "░" * (bar_width - filled)
+
+        if metrics.avg_completion_rate >= 80:
+            bar_color = "green"
+        elif metrics.avg_completion_rate >= 50:
+            bar_color = "yellow"
+        else:
+            bar_color = "red"
+
+        content = f"""[bold]Days tracked:[/bold] {days_str}
+
+[bold]Total Time:[/bold]
+  Planned: {planned_str} | Actual: {actual_str} ({var_sign}{var_str})
+  
+[bold]Daily Average:[/bold]
+  Planned: {avg_planned} | Actual: {avg_actual}
+
+[bold]Completion Rate:[/bold]
+  [{bar_color}]{bar}[/{bar_color}] {metrics.avg_completion_rate:.0f}%
+  Total: {metrics.total_completed}/{metrics.total_tasks} tasks completed"""
+
+        if metrics.best_day and metrics.worst_day:
+            content += f"\n\n[bold]Best day:[/bold] {metrics.best_day} | [bold]Worst day:[/bold] {metrics.worst_day}"
+
+        return Panel(
+            content,
+            title=f"[bold cyan]📈 {period_title}[/bold cyan]",
+            border_style="cyan",
+            padding=(1, 2),
+        )
+
+    @staticmethod
+    def format_completion_trend(metrics: AggregateMetrics) -> Panel:
+        """Format completion rate trend as ASCII chart."""
+        if not metrics.completion_rate_by_day:
+            return Panel("[dim]No data available[/dim]", title="Completion Trend")
+
+        # Sort by date
+        sorted_days = sorted(metrics.completion_rate_by_day.items())
+
+        # Build trend visualization
+        lines = []
+        for date, rate in sorted_days:
+            # Use just day name or short date
+            from datetime import datetime
+
+            try:
+                day_dt = datetime.strptime(date, "%Y-%m-%d")
+                day_label = day_dt.strftime("%a")  # Mon, Tue, etc.
+            except ValueError:
+                day_label = date[-5:]  # Fallback to MM-DD
+
+            bar_width = int(rate / 100 * 20)
+            bar = "█" * bar_width
+
+            # Color based on rate
+            if rate >= 80:
+                color = "green"
+            elif rate >= 50:
+                color = "yellow"
+            else:
+                color = "red"
+
+            lines.append(f"{day_label} │[{color}]{bar:<20}[/{color}] {rate:.0f}%")
+
+        content = "\n".join(lines)
+
+        return Panel(
+            content,
+            title="[bold magenta]📉 Completion Trend[/bold magenta]",
+            border_style="magenta",
+            padding=(1, 2),
+        )
+
+    @staticmethod
+    def format_aggregate_categories(metrics: AggregateMetrics) -> Table:
+        """Format aggregate category breakdown."""
+        table = Table(
+            title="Category Distribution (Total)",
+            show_header=True,
+            header_style="bold magenta",
+            box=box.ROUNDED,
+            padding=(0, 1),
+        )
+
+        table.add_column("Category", style="cyan", width=12)
+        table.add_column("Total", justify="right", width=10)
+        table.add_column("Avg/Day", justify="right", width=10)
+        table.add_column("%", justify="right", width=8)
+
+        category_colors = {
+            "productive": "green",
+            "meetings": "blue",
+            "admin": "yellow",
+            "breaks": "cyan",
+            "wasted": "red",
+            "uncategorized": "dim",
+        }
+
+        # Sort by total time
+        sorted_cats = sorted(metrics.total_by_category.items(), key=lambda x: x[1], reverse=True)
+
+        for category, total_mins in sorted_cats:
+            if total_mins == 0:
+                continue
+
+            color = category_colors.get(category, "white")
+            total_str = MetricsFormatter._format_minutes(total_mins)
+            avg_mins = metrics.avg_daily_by_category.get(category, 0)
+            avg_str = MetricsFormatter._format_minutes(int(avg_mins))
+            pct = metrics.category_percentages.get(category, 0)
+
+            table.add_row(
+                f"[{color}]{category.title()}[/{color}]",
+                total_str,
+                avg_str,
+                f"{pct:.0f}%",
+            )
+
+        return table
+
+    @staticmethod
+    def format_patterns(metrics: AggregateMetrics) -> Panel:
+        """Format identified patterns."""
+        if not metrics.patterns:
+            return Panel(
+                "[dim]Not enough data to identify patterns yet. Keep tracking![/dim]",
+                title="[bold green]🔍 Patterns[/bold green]",
+                border_style="green",
+                padding=(1, 2),
+            )
+
+        pattern_icons = {
+            "time_sink": "⚠",
+            "improvement": "📈",
+            "decline": "📉",
+            "successful_habit": "✓",
+            "peak_time": "⏰",
+        }
+
+        pattern_colors = {
+            "time_sink": "yellow",
+            "improvement": "green",
+            "decline": "red",
+            "successful_habit": "green",
+            "peak_time": "cyan",
+        }
+
+        lines = []
+        for pattern in metrics.patterns:
+            icon = pattern_icons.get(pattern.pattern_type, "•")
+            color = pattern_colors.get(pattern.pattern_type, "white")
+            confidence_bar = "●" * int(pattern.confidence * 5) + "○" * (
+                5 - int(pattern.confidence * 5)
+            )
+
+            lines.append(f"[{color}]{icon} {pattern.description}[/{color}]")
+            lines.append(f"   [dim]Confidence: {confidence_bar}[/dim]")
+
+        content = "\n".join(lines)
+
+        return Panel(
+            content,
+            title="[bold green]🔍 Patterns Identified[/bold green]",
+            border_style="green",
+            padding=(1, 2),
+        )

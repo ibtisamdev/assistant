@@ -313,6 +313,67 @@ def export_all(ctx, date):
         pass
 
 
+# ===== Productivity Metrics =====
+
+
+@cli.command()
+@click.argument("date", required=False)
+@click.option("--week", is_flag=True, help="Show weekly summary")
+@click.option("--month", is_flag=True, help="Show monthly summary")
+@click.option("--from", "from_date", help="Start date for custom range (YYYY-MM-DD)")
+@click.option("--to", "to_date", help="End date for custom range (YYYY-MM-DD)")
+@click.option("--json", "output_json", is_flag=True, help="Output as JSON")
+@click.pass_context
+def stats(ctx, date, week, month, from_date, to_date, output_json):
+    """
+    View productivity statistics.
+
+    \b
+    Examples:
+      day stats              # Today's stats
+      day stats 2026-01-20   # Specific day
+      day stats --week       # This week's summary
+      day stats --month      # This month's summary
+      day stats --from 2026-01-01 --to 2026-01-15  # Custom range
+    """
+    container = ctx.obj["container"]
+
+    async def _stats():
+        try:
+            if week or month or (from_date and to_date):
+                # Aggregate stats
+                from ..application.use_cases.view_aggregate_stats import ViewAggregateStatsUseCase
+
+                use_case = ViewAggregateStatsUseCase(container)
+                await use_case.execute(
+                    week=week,
+                    month=month,
+                    from_date=from_date,
+                    to_date=to_date,
+                    output_json=output_json,
+                )
+            else:
+                # Daily stats
+                from ..application.use_cases.view_stats import ViewStatsUseCase
+
+                use_case = ViewStatsUseCase(container)
+                session_id = date or datetime.now().strftime("%Y-%m-%d")
+                await use_case.execute(session_id, output_json=output_json)
+
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_stats())
+    except KeyboardInterrupt:
+        pass
+
+
 # ===== Session Management =====
 
 
