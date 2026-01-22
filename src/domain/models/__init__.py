@@ -12,6 +12,7 @@ from .metrics import (
     ProductivityPattern,
     AggregateMetrics,
 )
+from .template import DayTemplate, TemplateMetadata
 
 __all__ = [
     "State",
@@ -38,4 +39,6 @@ __all__ = [
     "DailyMetrics",
     "ProductivityPattern",
     "AggregateMetrics",
+    "DayTemplate",
+    "TemplateMetadata",
 ]

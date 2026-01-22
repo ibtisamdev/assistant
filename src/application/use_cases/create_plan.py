@@ -2,10 +2,12 @@
 
 import logging
 from datetime import datetime
+from rich.prompt import Confirm
 from ...domain.models.session import Memory, SessionMetadata, AgentState
 from ...domain.models.conversation import ConversationHistory
 from ...domain.models.state import State
 from ...domain.models.profile import UserProfile
+from ...domain.services.task_import_service import TaskImportService
 from ..container import Container
 
 logger = logging.getLogger(__name__)
@@ -21,6 +23,7 @@ class CreatePlanUseCase:
         self.input_handler = container.input_handler
         self.plan_formatter = container.plan_formatter
         self.progress = container.progress_formatter
+        self.task_import = TaskImportService()
 
     async def execute(self, session_id: str, force_new: bool = False) -> Memory:
         """
@@ -44,9 +47,16 @@ class CreatePlanUseCase:
 
         # Main workflow
         if memory.agent_state.state == State.idle:
+            # Check for incomplete tasks from yesterday
+            incomplete_context = await self._check_and_prompt_incomplete_tasks(session_id)
+
             # Get user goal
             self.progress.print_header("Let's create your daily plan")
             goal = await self.input_handler.get_goal()
+
+            # If user wants to include incomplete tasks, add them to context
+            if incomplete_context:
+                goal = f"{goal}\n\n{incomplete_context}"
 
             # Process goal
             agent_state = await self.agent.process_user_goal(goal, memory, profile)
@@ -165,3 +175,53 @@ class CreatePlanUseCase:
             f"Updated planning history for user {profile.user_id} "
             f"(sessions: {updated_profile.planning_history.sessions_completed})"
         )
+
+    async def _check_and_prompt_incomplete_tasks(self, session_id: str) -> str:
+        """
+        Check for incomplete tasks from yesterday and prompt user to include them.
+
+        Returns:
+            Context string to add to goal if user wants to include tasks, empty string otherwise
+        """
+        from rich.console import Console
+        from rich.table import Table
+        from ...domain.models.planning import TaskStatus
+
+        console = Console()
+
+        # Get yesterday's session
+        yesterday_id = self.task_import.get_yesterday_session_id(session_id)
+        yesterday = await self.storage.load_session(yesterday_id)
+
+        if not yesterday or not yesterday.agent_state.plan:
+            return ""
+
+        # Get incomplete tasks
+        incomplete = self.task_import.get_incomplete_tasks(yesterday)
+
+        if not incomplete:
+            return ""
+
+        # Display incomplete tasks
+        console.print(
+            f"\n[yellow]Found {len(incomplete)} incomplete task(s) from {yesterday_id}:[/yellow]"
+        )
+
+        table = Table(show_header=True, box=None)
+        table.add_column("#", style="dim", width=3)
+        table.add_column("Task")
+        table.add_column("Est.", justify="right", width=6)
+
+        for i, task in enumerate(incomplete, 1):
+            est = f"{task.estimated_minutes}m" if task.estimated_minutes else "-"
+            table.add_row(str(i), task.task, est)
+
+        console.print(table)
+        console.print()
+
+        # Ask user if they want to include them
+        if Confirm.ask("Include these tasks in today's plan?", default=True):
+            # Format tasks for context
+            return self.task_import.format_tasks_for_context(incomplete, yesterday_id)
+
+        return ""

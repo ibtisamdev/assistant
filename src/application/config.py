@@ -41,6 +41,7 @@ class StorageConfig(BaseSettings):
     backend: str = "json"
     sessions_dir: Path = Path("sessions")
     profiles_dir: Path = Path("profiles")
+    templates_dir: Path = Path("data/templates")
     plans_export_dir: Path = Path("data/plans")
     summaries_export_dir: Path = Path("data/summaries")
     cache_ttl: int = 300
@@ -51,7 +52,12 @@ class StorageConfig(BaseSettings):
     connection_pool_size: int = 5
 
     @field_validator(
-        "sessions_dir", "profiles_dir", "plans_export_dir", "summaries_export_dir", mode="before"
+        "sessions_dir",
+        "profiles_dir",
+        "templates_dir",
+        "plans_export_dir",
+        "summaries_export_dir",
+        mode="before",
     )
     @classmethod
     def convert_to_path(cls, v):

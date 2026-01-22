@@ -101,6 +101,51 @@ def start(ctx, date):
 
 @cli.command()
 @click.argument("date", required=False)
+@click.option("--template", help="Use a saved template instead of yesterday's plan")
+@click.pass_context
+def quick(ctx, date, template):
+    """
+    Quick start - create plan from previous pattern.
+
+    Uses yesterday's plan structure and carries over incomplete tasks.
+    Skips clarifying questions for faster planning.
+
+    Falls back to normal 'day start' if no previous session exists.
+    """
+    from ..application.use_cases.quick_start import QuickStartUseCase
+
+    container = ctx.obj["container"]
+    use_case = QuickStartUseCase(container)
+    orchestrator = SessionOrchestrator(container)
+
+    async def _quick():
+        try:
+            result = await use_case.execute(date, from_template=template)
+
+            if result is None:
+                # Fall back to normal start
+                rprint("[dim]Falling back to normal planning...[/dim]\n")
+                await orchestrator.run_new_session(date, force_new=False)
+
+            rprint("\n[bold green]Session complete![/bold green]\n")
+        except KeyboardInterrupt:
+            rprint("\n[yellow]Session interrupted. Progress saved.[/yellow]")
+        except LLMError as e:
+            rprint(f"\n[bold red]AI Service Error:[/bold red] {e}")
+            rprint("[dim]Please try again in a few moments.[/dim]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_quick())
+    except KeyboardInterrupt:
+        pass
+
+
+@cli.command()
+@click.argument("date", required=False)
 @click.pass_context
 def revise(ctx, date):
     """Revise an existing plan."""
@@ -169,6 +214,56 @@ def list(ctx):
         console.print(table)
 
     asyncio.run(_list())
+
+
+# ===== Task Import =====
+
+
+@cli.command(name="import")
+@click.argument("date", required=False)
+@click.option("--from", "from_date", help="Source session date (defaults to yesterday)")
+@click.option("--all", "import_all", is_flag=True, help="Import all without prompting")
+@click.option("--include-skipped", is_flag=True, help="Also include skipped tasks")
+@click.pass_context
+def import_tasks(ctx, date, from_date, import_all, include_skipped):
+    """
+    Import incomplete tasks from a previous session.
+
+    By default, imports from yesterday into today's plan.
+
+    \b
+    Examples:
+      day import                    # Import from yesterday to today
+      day import --from 2026-01-20  # Import from specific date
+      day import --all              # Import all without prompting
+    """
+    from ..application.use_cases.import_tasks import ImportTasksUseCase
+
+    container = ctx.obj["container"]
+    use_case = ImportTasksUseCase(container)
+
+    async def _import():
+        try:
+            await use_case.execute(
+                target_session_id=date,
+                source_session_id=from_date,
+                import_all=import_all,
+                include_skipped=include_skipped,
+            )
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint("[dim]Hint: Create a plan first with 'day start' or 'day quick'[/dim]")
+        except KeyboardInterrupt:
+            rprint("\n[yellow]Import cancelled.[/yellow]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_import())
+    except KeyboardInterrupt:
+        pass
 
 
 # ===== Time Tracking =====
@@ -496,6 +591,144 @@ def profile(ctx, section, user_id):
         asyncio.run(_setup_profile())
     except KeyboardInterrupt:
         pass
+
+
+# ===== Template Management =====
+
+
+@cli.group()
+@click.pass_context
+def template(ctx):
+    """
+    Manage day templates.
+
+    Templates let you save and reuse common daily patterns.
+    """
+    pass
+
+
+@template.command(name="list")
+@click.pass_context
+def template_list(ctx):
+    """List all saved templates."""
+    from ..application.use_cases.template_list import ListTemplatesUseCase
+
+    container = ctx.obj["container"]
+    use_case = ListTemplatesUseCase(container)
+
+    async def _list():
+        await use_case.execute()
+
+    try:
+        asyncio.run(_list())
+    except KeyboardInterrupt:
+        pass
+
+
+@template.command(name="save")
+@click.argument("name")
+@click.option("--date", help="Source session date (defaults to today)")
+@click.option("--description", "-d", default="", help="Template description")
+@click.option("--force", is_flag=True, help="Overwrite without confirmation")
+@click.pass_context
+def template_save(ctx, name, date, description, force):
+    """
+    Save a day's plan as a template.
+
+    Example: day template save work-day --description "Standard work day"
+    """
+    from ..application.use_cases.template_save import SaveTemplateUseCase
+
+    container = ctx.obj["container"]
+    use_case = SaveTemplateUseCase(container)
+
+    async def _save():
+        try:
+            await use_case.execute(name, date, description, force)
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_save())
+    except KeyboardInterrupt:
+        pass
+
+
+@template.command(name="show")
+@click.argument("name")
+@click.pass_context
+def template_show(ctx, name):
+    """Display details of a template."""
+    from ..application.use_cases.template_show import ShowTemplateUseCase
+
+    container = ctx.obj["container"]
+    use_case = ShowTemplateUseCase(container)
+
+    async def _show():
+        await use_case.execute(name)
+
+    try:
+        asyncio.run(_show())
+    except KeyboardInterrupt:
+        pass
+
+
+@template.command(name="apply")
+@click.argument("name")
+@click.option("--date", help="Target session date (defaults to today)")
+@click.option("--force", is_flag=True, help="Overwrite without confirmation")
+@click.pass_context
+def template_apply(ctx, name, date, force):
+    """
+    Apply a template to create a new plan.
+
+    Example: day template apply work-day
+    """
+    from ..application.use_cases.template_apply import ApplyTemplateUseCase
+
+    container = ctx.obj["container"]
+    use_case = ApplyTemplateUseCase(container)
+
+    async def _apply():
+        try:
+            await use_case.execute(name, date, force)
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_apply())
+    except KeyboardInterrupt:
+        pass
+
+
+@template.command(name="delete")
+@click.argument("name")
+@click.option("--force", is_flag=True, help="Skip confirmation")
+@click.pass_context
+def template_delete(ctx, name, force):
+    """Delete a template."""
+    from ..application.use_cases.template_delete import DeleteTemplateUseCase
+
+    container = ctx.obj["container"]
+    use_case = DeleteTemplateUseCase(container)
+
+    async def _delete():
+        await use_case.execute(name, force)
+
+    try:
+        asyncio.run(_delete())
+    except KeyboardInterrupt:
+        pass
+
+
+# ===== Profile Management (continued) =====
 
 
 @cli.command()

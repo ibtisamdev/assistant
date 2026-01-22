@@ -11,16 +11,6 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
 
 ## Up Next
 
-### Priority 5: Workflow Integration
-- [ ] Quick start mode - `day quick`
-  - Skip questions if no changes from yesterday
-  - Use profile + previous day's pattern
-- [ ] Recurring task templates
-  - Save common daily patterns (work day, weekend, etc.)
-  - Command: `day template work-day`
-- [ ] Import yesterday's incomplete tasks
-  - Auto-suggest unfinished tasks from previous day
-
 ### Priority 6: Testing & CI/CD (v1.0 Release Gate)
 Production readiness testing infrastructure and quality gates.
 
@@ -102,6 +92,43 @@ Production readiness testing infrastructure and quality gates.
 - [ ] Web UI for better visualization
 
 ## Completed
+
+### Priority 5: Workflow Integration - Completed 2026-01-22
+- [x] **Quick start mode** - `day quick [DATE]`
+  - Skip clarifying questions for users with established routines
+  - Uses yesterday's plan structure as template
+  - Automatically includes incomplete tasks from yesterday
+  - Falls back to normal `day start` if no previous session exists
+  - Supports `--template <name>` flag to use saved templates
+- [x] **Recurring task templates** - `day template` command group
+  - `day template list` - List all saved templates
+  - `day template save <name>` - Save current day's plan as template
+  - `day template show <name>` - Display template details
+  - `day template apply <name>` - Create plan from template
+  - `day template delete <name>` - Delete a template
+  - Templates stored in `data/templates/` directory
+  - Tracks usage statistics (use count, last used date)
+- [x] **Import yesterday's incomplete tasks**
+  - `day import` - Standalone command to import tasks
+  - Auto-prompt in `day start`: "Found 3 incomplete tasks. Import? [Y/n]"
+  - Interactive task selection (import all, select specific, or skip)
+  - Supports `--from <date>` to import from specific date
+  - `--include-skipped` flag to also import skipped tasks
+
+**Key Features:**
+- DayTemplate model for reusable planning patterns
+- TaskImportService for task carry-over logic
+- QuickStartUseCase for rapid plan generation
+- Template storage methods in JSONStorage
+- System prompt updates for quick start mode
+- 23 new tests (all passing, 140 total)
+- Full backward compatibility
+
+**Impact:**
+- Faster planning: Skip questions for routine days
+- No lost tasks: Incomplete tasks automatically suggested
+- Reusable patterns: Save and apply common schedules
+- Workflow efficiency: Multiple paths to create plans
 
 ### Priority 4: Productivity Metrics - Completed 2026-01-22
 - [x] **Time categorization**

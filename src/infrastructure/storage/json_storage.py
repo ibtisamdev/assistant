@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional, List
 from ...domain.models.session import Memory
 from ...domain.models.profile import UserProfile
+from ...domain.models.template import DayTemplate, TemplateMetadata
 from ...domain.exceptions import StorageError
 from ...application.config import StorageConfig
 
@@ -21,10 +22,12 @@ class JSONStorage:
         self.config = config
         self.sessions_dir = config.sessions_dir
         self.profiles_dir = config.profiles_dir
+        self.templates_dir = config.templates_dir
 
         # Ensure directories exist
         self.sessions_dir.mkdir(exist_ok=True)
         self.profiles_dir.mkdir(exist_ok=True)
+        self.templates_dir.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"JSON storage initialized: {self.sessions_dir}")
 
@@ -176,3 +179,107 @@ class JSONStorage:
             logger.warning(f"Renamed corrupted session to {corrupted_path.name}")
         except Exception as e:
             logger.error(f"Failed to rename corrupted session: {e}")
+
+    # ==================== Template Storage Methods ====================
+
+    async def save_template(self, name: str, template: DayTemplate) -> None:
+        """Save a day template."""
+        # Sanitize name for filename
+        safe_name = self._sanitize_template_name(name)
+        path = self.templates_dir / f"{safe_name}.json"
+
+        try:
+            data = template.model_dump(mode="json")
+            json_str = json.dumps(data, indent=2)
+
+            async with aiofiles.open(path, "w") as f:
+                await f.write(json_str)
+
+            logger.debug(f"Saved template '{name}'")
+
+        except Exception as e:
+            logger.error(f"Failed to save template '{name}': {e}")
+            raise StorageError(f"Failed to save template: {e}") from e
+
+    async def load_template(self, name: str) -> Optional[DayTemplate]:
+        """Load a day template by name."""
+        safe_name = self._sanitize_template_name(name)
+        path = self.templates_dir / f"{safe_name}.json"
+
+        if not path.exists():
+            return None
+
+        try:
+            async with aiofiles.open(path, "r") as f:
+                content = await f.read()
+
+            data = json.loads(content)
+            template = DayTemplate.model_validate(data)
+            logger.debug(f"Loaded template '{name}'")
+            return template
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Corrupted template '{name}': {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to load template '{name}': {e}")
+            return None
+
+    async def list_templates(self) -> List[TemplateMetadata]:
+        """List all saved templates (metadata only)."""
+        templates = []
+
+        for path in self.templates_dir.glob("*.json"):
+            try:
+                async with aiofiles.open(path, "r") as f:
+                    content = await f.read()
+                data = json.loads(content)
+
+                templates.append(
+                    TemplateMetadata(
+                        name=data.get("name", path.stem),
+                        description=data.get("description", ""),
+                        task_count=len(data.get("schedule", [])),
+                        created_at=data.get("created_at"),
+                        last_used=data.get("last_used"),
+                        use_count=data.get("use_count", 0),
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Failed to read template metadata from {path}: {e}")
+
+        # Sort by use_count (most used first), then by name
+        templates.sort(key=lambda x: (-x.use_count, x.name))
+        return templates
+
+    async def delete_template(self, name: str) -> bool:
+        """Delete a template by name."""
+        safe_name = self._sanitize_template_name(name)
+        path = self.templates_dir / f"{safe_name}.json"
+
+        if path.exists():
+            try:
+                await asyncio.to_thread(path.unlink)
+                logger.info(f"Deleted template '{name}'")
+                return True
+            except Exception as e:
+                logger.error(f"Failed to delete template '{name}': {e}")
+                return False
+        return False
+
+    async def template_exists(self, name: str) -> bool:
+        """Check if a template exists."""
+        safe_name = self._sanitize_template_name(name)
+        path = self.templates_dir / f"{safe_name}.json"
+        return path.exists()
+
+    def _sanitize_template_name(self, name: str) -> str:
+        """Sanitize template name for use as filename."""
+        import re
+
+        # Replace spaces and special chars with hyphens, lowercase
+        safe = re.sub(r"[^\w\-]", "-", name.lower())
+        # Remove consecutive hyphens
+        safe = re.sub(r"-+", "-", safe)
+        # Remove leading/trailing hyphens
+        return safe.strip("-")

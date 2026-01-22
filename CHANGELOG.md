@@ -7,8 +7,130 @@ This project is currently in **development mode (v0.1.0-dev)**. All changes are 
 ## [Unreleased] - Development (v0.1.0-dev)
 
 ### Planned Features
-- Priority 4: Productivity metrics and analytics
-- Priority 5: Workflow integration (quick start, templates, recurring tasks)
+- Priority 6: Testing & CI/CD (v1.0 Release Gate)
+
+### 2026-01-22: Workflow Integration (Priority 5)
+
+Complete implementation of workflow streamlining features: quick start mode, recurring task templates, and task import from previous sessions.
+
+### Added
+
+**Quick Start Mode (`day quick`):**
+- `day quick [DATE]` - Fast plan creation using yesterday's pattern
+- Skips clarifying questions for users with established routines
+- Automatically includes incomplete tasks from yesterday
+- Falls back to `day start` if no previous session exists
+- `--template <name>` flag to use saved template instead of yesterday
+- Profile completeness check (requires score >= 2)
+- Direct feedback state entry for rapid iterations
+
+**Recurring Task Templates:**
+- `day template list` - List all saved templates with usage stats
+- `day template save <name>` - Save current plan as reusable template
+- `day template show <name>` - Display template details and schedule
+- `day template apply <name>` - Create new plan from template
+- `day template delete <name>` - Remove a template
+- Templates stored in `data/templates/{name}.json`
+- `DayTemplate` model with metadata (created_at, last_used, use_count)
+- Automatic task status reset when applying templates
+- Usage tracking for template popularity
+
+**Task Import System:**
+- `day import [DATE]` - Import incomplete tasks from previous session
+- Auto-prompt in `day start`: "Found 3 incomplete tasks. Import? [Y/n]"
+- Interactive task selection (all, specific numbers, or none)
+- `--from <date>` flag to import from specific date
+- `--include-skipped` flag to also import skipped tasks
+- `--all` flag to import without prompting
+- `TaskImportService` for task carry-over logic
+- Merges imported tasks at start of new plan
+
+**System Prompt Updates:**
+- Rules 24-28 added for quick start mode behavior
+- Instructions for preserving template structure
+- Guidance on prioritizing incomplete tasks
+
+### Technical Details
+
+**New Files:**
+- `src/domain/models/template.py` (70 lines) - DayTemplate, TemplateMetadata models
+- `src/domain/services/task_import_service.py` (175 lines) - Task import business logic
+- `src/application/use_cases/quick_start.py` (230 lines) - Quick start orchestration
+- `src/application/use_cases/template_list.py` (50 lines)
+- `src/application/use_cases/template_save.py` (75 lines)
+- `src/application/use_cases/template_show.py` (100 lines)
+- `src/application/use_cases/template_apply.py` (100 lines)
+- `src/application/use_cases/template_delete.py` (50 lines)
+- `src/application/use_cases/import_tasks.py` (150 lines)
+- `tests/unit/domain/test_task_import_service.py` (230 lines) - 17 tests
+- `tests/unit/domain/test_template.py` (100 lines) - 6 tests
+
+**Modified Files:**
+- `src/application/config.py` - Added `templates_dir` to StorageConfig
+- `src/infrastructure/storage/json_storage.py` - Added template CRUD methods
+- `src/domain/services/__init__.py` - Export TaskImportService
+- `src/domain/models/__init__.py` - Export DayTemplate, TemplateMetadata
+- `src/application/use_cases/__init__.py` - Export 7 new use cases
+- `src/application/use_cases/create_plan.py` - Added incomplete task auto-prompt
+- `src/cli/main.py` - Added `quick`, `import`, and `template` command group
+- `config/prompts/system.txt` - Added quick start mode rules
+
+**Storage:**
+- Templates: `data/templates/{name}.json`
+- Template name sanitization for safe filenames
+- Atomic writes for template persistence
+
+### Testing
+
+- **23 new tests** for workflow features:
+  - TaskImportService: 17 tests (get incomplete, prepare tasks, merge, format)
+  - DayTemplate model: 6 tests (create, prepare for new day, record use)
+- **All 140 tests passing**
+- Full backward compatibility maintained
+
+### Usage Examples
+
+```bash
+# Quick start (uses yesterday + incomplete tasks)
+day quick
+
+# Quick start from template
+day quick --template work-day
+
+# Template management
+day template list
+day template save work-day --description "Standard work day"
+day template show work-day
+day template apply work-day
+day template delete old-template
+
+# Import incomplete tasks
+day import                      # From yesterday
+day import --from 2026-01-20   # From specific date
+day import --all               # Import all without prompting
+```
+
+### Impact
+
+This release completes Priority 5 from the roadmap:
+- **Faster planning**: Skip questions for routine days with `day quick`
+- **No lost tasks**: Incomplete tasks automatically suggested or imported
+- **Reusable patterns**: Save and apply common schedules as templates
+- **Multiple paths**: `day start`, `day quick`, `day template apply` all create plans
+- **Workflow efficiency**: Users can choose the best approach for each day
+
+**Before:**
+- Every day required answering clarifying questions
+- Incomplete tasks easily forgotten
+- No way to reuse common patterns
+
+**After:**
+- Quick start skips questions using yesterday's pattern
+- Auto-prompt for incomplete tasks: "Import 3 tasks? [Y/n]"
+- Templates save common patterns for one-command application
+- 23 new tests ensure reliability
+
+---
 
 ### 2026-01-22: Export & Review (Priority 3)
 
@@ -686,8 +808,9 @@ This project uses **development versioning** until production-ready:
 - ✅ Priority 2: Time Tracking (Done)
 - ✅ Profile System (Done)
 - ✅ Priority 3: Export & Review (Done)
-- ⏳ Priority 4: Productivity Metrics
-- ⏳ Priority 5: Workflow Integration
+- ✅ Priority 4: Productivity Metrics (Done)
+- ✅ Priority 5: Workflow Integration (Done)
+- ⏳ Priority 6: Testing & CI/CD (v1.0 Release Gate)
 
 After v1.0.0, this project will follow [Semantic Versioning](https://semver.org/):
 - **MAJOR** (x.0.0) = Breaking changes
