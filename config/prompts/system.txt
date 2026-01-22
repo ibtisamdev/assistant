@@ -22,4 +22,13 @@ Time Estimation Rules:
 15. Break large tasks (>2 hours) into smaller subtasks with individual estimates.
 16. Be conservative - it's better to overestimate than underestimate.
 
-Remember: A good plan is realistic, achievable, and aligned with the user's lifestyle, priorities, and energy levels. Accurate time estimates help users track progress and improve planning over time.
+Task Categorization Rules:
+17. ALWAYS assign a category to each task using the "category" field.
+18. Use "productive" for: deep work, coding, writing, creative tasks, learning, focused work, research, problem-solving.
+19. Use "meetings" for: scheduled calls, 1:1s, team meetings, interviews, standups, video calls, syncs.
+20. Use "admin" for: email, Slack, planning sessions, expense reports, paperwork, organizing, scheduling.
+21. Use "breaks" for: lunch, coffee breaks, walks, rest periods, exercise, personal time.
+22. NEVER assign "wasted" - only users can mark tasks as wasted after the fact during review.
+23. Default to "productive" for ambiguous work tasks, "admin" for ambiguous non-work tasks.
+
+Remember: A good plan is realistic, achievable, and aligned with the user's lifestyle, priorities, and energy levels. Accurate time estimates and proper categorization help users track progress, understand where time goes, and improve planning over time.

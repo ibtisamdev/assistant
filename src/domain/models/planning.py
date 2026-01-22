@@ -16,6 +16,17 @@ class TaskStatus(Enum):
     skipped = "skipped"
 
 
+class TaskCategory(Enum):
+    """Category of task for productivity tracking."""
+
+    productive = "productive"  # Deep work, creative tasks, coding, writing
+    meetings = "meetings"  # Scheduled meetings, calls, 1:1s
+    admin = "admin"  # Administrative tasks, email, planning
+    breaks = "breaks"  # Rest, lunch, walks
+    wasted = "wasted"  # Unplanned distractions (user-assigned only)
+    uncategorized = "uncategorized"  # Default/not yet categorized
+
+
 class TimeEdit(BaseModel):
     """Audit trail for manual time edits."""
 
@@ -41,6 +52,12 @@ class ScheduleItem(BaseModel):
     actual_start: Optional[datetime] = Field(default=None, description="When task actually started")
     actual_end: Optional[datetime] = Field(default=None, description="When task actually completed")
     status: TaskStatus = Field(default=TaskStatus.not_started, description="Current task status")
+
+    # Category for productivity tracking
+    category: TaskCategory = Field(
+        default=TaskCategory.uncategorized,
+        description="Category for productivity analysis (productive, meetings, admin, breaks, wasted)",
+    )
 
     # Audit trail for manual edits
     edits: List[TimeEdit] = Field(default_factory=list, description="History of manual time edits")

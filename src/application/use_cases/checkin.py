@@ -9,7 +9,7 @@ from rich.table import Table
 from rich.panel import Panel
 
 from ...domain.models.session import Memory
-from ...domain.models.planning import TaskStatus
+from ...domain.models.planning import TaskStatus, TaskCategory
 from ...domain.services.time_tracking_service import TimeTrackingService
 from ...domain.exceptions import SessionNotFound
 from ..container import Container
@@ -94,12 +94,13 @@ class CheckinUseCase:
             self.console.print("4. ⏭️  Skip a task")
             self.console.print("5. 📊 View progress stats")
             self.console.print("6. ✏️  Edit task times")
-            self.console.print("7. 🚪 Exit")
+            self.console.print("7. 🏷️  Edit task categories")
+            self.console.print("8. 🚪 Exit")
 
             choice = Prompt.ask(
                 "\n[bold yellow]Choose an option[/bold yellow]",
-                choices=["1", "2", "3", "4", "5", "6", "7"],
-                default="7",
+                choices=["1", "2", "3", "4", "5", "6", "7", "8"],
+                default="8",
             )
 
             if choice == "1":
@@ -115,6 +116,8 @@ class CheckinUseCase:
             elif choice == "6":
                 await self._interactive_edit_times(memory)
             elif choice == "7":
+                await self._interactive_edit_categories(memory)
+            elif choice == "8":
                 self.console.print("[green]✓ Check-in complete![/green]")
                 break
 
@@ -332,16 +335,91 @@ class CheckinUseCase:
         except ValueError as e:
             self.console.print(f"[red]Error: {e}[/red]")
 
+    async def _interactive_edit_categories(self, memory: Memory) -> None:
+        """Interactive category editing for tasks."""
+        plan = memory.agent_state.plan
+
+        # Category colors for display
+        category_colors = {
+            "productive": "green",
+            "meetings": "blue",
+            "admin": "yellow",
+            "breaks": "cyan",
+            "wasted": "red",
+            "uncategorized": "dim",
+        }
+
+        # Display all tasks with their current categories
+        self.console.print("\n[bold]Current task categories:[/bold]")
+        for i, item in enumerate(plan.schedule, 1):
+            color = category_colors.get(item.category.value, "white")
+            self.console.print(f"{i}. {item.task[:40]} - [{color}]{item.category.value}[/{color}]")
+
+        # Get task choice
+        task_choice = Prompt.ask(
+            "\n[bold yellow]Select task to re-categorize (or 'all' for all)[/bold yellow]",
+            choices=[str(i) for i in range(1, len(plan.schedule) + 1)] + ["all"],
+        )
+
+        # Get available categories (excluding 'uncategorized')
+        category_choices = [c.value for c in TaskCategory if c != TaskCategory.uncategorized]
+
+        if task_choice == "all":
+            # Bulk edit all tasks
+            self.console.print("\n[bold]Select new category for ALL tasks:[/bold]")
+            for cat in category_choices:
+                color = category_colors.get(cat, "white")
+                self.console.print(f"  [{color}]{cat}[/{color}]")
+
+            new_category = Prompt.ask(
+                "\n[bold yellow]New category[/bold yellow]",
+                choices=category_choices,
+            )
+
+            # Apply to all tasks
+            for item in plan.schedule:
+                item.category = TaskCategory(new_category)
+
+            self.console.print(
+                f"[green]✓ Updated all {len(plan.schedule)} tasks to '{new_category}'[/green]"
+            )
+        else:
+            # Single task edit
+            task = plan.schedule[int(task_choice) - 1]
+
+            self.console.print(f"\n[bold]Current category:[/bold] {task.category.value}")
+            self.console.print("[bold]Available categories:[/bold]")
+            for cat in category_choices:
+                color = category_colors.get(cat, "white")
+                self.console.print(f"  [{color}]{cat}[/{color}]")
+
+            new_category = Prompt.ask(
+                "\n[bold yellow]New category[/bold yellow]",
+                choices=category_choices,
+            )
+
+            task.category = TaskCategory(new_category)
+            self.console.print(f"[green]✓ Updated '{task.task[:30]}' to '{new_category}'[/green]")
+
     def _display_plan_with_progress(self, plan) -> None:
         """Display plan with progress indicators."""
-        # This will be enhanced in Phase 7 with better formatting
-        # For now, use a simple display
+        # Category colors
+        category_colors = {
+            "productive": "green",
+            "meetings": "blue",
+            "admin": "yellow",
+            "breaks": "cyan",
+            "wasted": "red",
+            "uncategorized": "dim",
+        }
+
         table = Table(title="Today's Plan")
-        table.add_column("Status", style="cyan")
-        table.add_column("Time", style="blue")
+        table.add_column("Status", style="cyan", width=6)
+        table.add_column("Time", style="blue", width=13)
         table.add_column("Task", style="white")
-        table.add_column("Est.", justify="right")
-        table.add_column("Act.", justify="right")
+        table.add_column("Category", width=12)
+        table.add_column("Est.", justify="right", width=6)
+        table.add_column("Act.", justify="right", width=6)
 
         for item in plan.schedule:
             # Status icon
@@ -354,11 +432,15 @@ class CheckinUseCase:
             else:
                 status = "[ ]"
 
+            # Category with color
+            cat_color = category_colors.get(item.category.value, "white")
+            category = f"[{cat_color}]{item.category.value}[/{cat_color}]"
+
             # Time estimates
             est = f"{item.estimated_minutes}m" if item.estimated_minutes else "-"
             act = f"{item.actual_minutes}m" if item.actual_minutes else "-"
 
-            table.add_row(status, item.time, item.task, est, act)
+            table.add_row(status, item.time, item.task, category, est, act)
 
         self.console.print(table)
 
