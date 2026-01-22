@@ -1,14 +1,18 @@
 # Personal Assistant
 
-[![Version](https://img.shields.io/badge/version-0.1.3-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.1.0--dev-orange)](CHANGELOG.md)
 [![Python](https://img.shields.io/badge/python-3.12+-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-A production-ready AI planning agent that helps you create realistic daily plans through interactive conversation. Built with clean architecture, async-first design, and extensibility in mind.
+A Daily Planning AI Agent that helps you create realistic daily plans through interactive conversation. Built with clean architecture, async-first design, and extensibility in mind.
 
-> **Note:** This project is in active development (v0.1.x). The API may change until v1.0.0 release.
+> **⚠️ Development Version:** This project is in active development (`v0.1.0-dev`). 
 > 
-> **Latest Release:** v0.1.3 - Time tracking and progress monitoring ([see changelog](CHANGELOG.md))
+> **No releases until v1.0.0** - The first production release will be made after all 5 roadmap priorities are complete.
+> 
+> **Progress:** ✅ Stability ✅ Time Tracking ✅ Profile System ⏳ Export ⏳ Analytics ⏳ Workflow
+> 
+> See [CHANGELOG.md](CHANGELOG.md) for detailed development history.
 
 ## 🎯 Features
 
@@ -17,10 +21,12 @@ A production-ready AI planning agent that helps you create realistic daily plans
 - Structured daily plans (schedule, priorities, notes)
 - Multi-turn conversation for plan refinement
 - Session persistence and resume capability
-- User profile support for personalized planning
+- **Expanded user profiles** - 10 categories (personal, productivity, wellness, work, learning, history)
+- **Auto-learning system** - Improves with every session
+- **Profile completeness scoring** - Reduces redundant questions
 - Beautiful terminal UI with colors and tables
 - Async operations for responsiveness
-- Time tracking with interactive check-ins
+- **Time tracking** with interactive check-ins
 - Automatic time estimation by LLM
 - Progress monitoring and analytics
 - Actual vs planned variance tracking
@@ -76,6 +82,11 @@ uv run plan checkin                      # Interactive check-in
 uv run plan checkin --start "Task name"  # Quick start
 uv run plan checkin --complete "Task"    # Quick complete
 uv run plan checkin --status             # View progress
+
+# Profile management
+uv run plan profile                      # Full guided setup
+uv run plan profile productivity         # Edit specific section
+uv run plan show-profile                 # View current profile
 
 # Session management
 uv run plan session list
@@ -155,22 +166,14 @@ uv run pytest tests/unit/domain/test_state_machine.py
 
 ## 📚 Documentation
 
+- **[CHANGELOG.md](CHANGELOG.md)** - Development history (tracked by date)
+- **[ROADMAP.md](ROADMAP.md)** - Development roadmap and progress
 - **[AGENTS.md](AGENTS.md)** - Developer guide for AI coding agents
-- **[ROADMAP.md](ROADMAP.md)** - Development roadmap
-- **[docs/](docs/)** - Architecture and planning documents
-- **[legacy/](legacy/)** - Previous v1.0 implementation
+- **[docs/user-profiles.md](docs/user-profiles.md)** - User profile system guide
+- **[docs/configuration.md](docs/configuration.md)** - Configuration guide
+- **[docs/](docs/)** - Additional documentation
 
-## 🔄 Migration from v1.0
 
-The legacy code (v1.0) has been moved to `legacy/` directory. Key changes:
-
-- **New CLI:** Use `uv run plan` instead of `python main.py`
-- **Better UX:** Rich formatting with colors and tables
-- **Async:** All operations are now async
-- **Modular:** Clean separation of concerns
-- **Extensible:** Easy to add new features
-
-Sessions from v1.0 are compatible with v2.0.
 
 ## 🤝 Contributing
 

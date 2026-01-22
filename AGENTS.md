@@ -10,47 +10,33 @@ This is a **Daily Planning AI Agent** - an agentic system that helps users creat
 
 ## Versioning Policy
 
-This project follows [Semantic Versioning](https://semver.org/) (SemVer):
+This project uses **development versioning** - staying at `v0.1.0-dev` until production-ready.
 
-**Version Format:** `MAJOR.MINOR.PATCH` (e.g., `0.1.3`)
+**Current Version:** `0.1.0-dev` (Development)
 
-**Version Bumps:**
+**Why no intermediate versions?**
+- No users until production-ready (no releases during development)
+- Changes tracked by date in CHANGELOG.md, not version numbers
+- Version bump to `1.0.0` signals: "Ready for production use"
+
+**When v1.0.0 will be released:**
+- ✅ Priority 1: Stability (Completed 2026-01-19)
+- ✅ Priority 2: Time Tracking (Completed 2026-01-21)
+- ✅ Profile System Expansion (Completed 2026-01-22)
+- ⏳ Priority 3: Export & Review
+- ⏳ Priority 4: Productivity Metrics
+- ⏳ Priority 5: Workflow Integration
+
+**Post-1.0 Versioning:**
+
+After v1.0.0, this project will follow [Semantic Versioning](https://semver.org/):
 - **MAJOR** (x.0.0): Breaking changes to the API or CLI interface
-- **MINOR** (0.x.0): Reserved for v1.0.0 release
-- **PATCH** (0.1.x): New features, bug fixes, improvements (pre-1.0 development)
+- **MINOR** (1.x.0): New features, backwards compatible
+- **PATCH** (1.0.x): Bug fixes only
 
-**Pre-1.0 Development:**
-- Current phase: `0.1.x` (API may change)
-- Version `1.0.0` will be released when core features are stable and ready for production use
-- Likely milestone: After Priorities 4-5 from ROADMAP.md are complete
+**No version bumps during development** - just track progress by date in CHANGELOG.md.
 
-**Version History:**
-- `v0.1.0` (2026-01-17): Initial monolithic implementation
-- `v0.1.1` (2026-01-19): Stability improvements (Priority 1)
-- `v0.1.2` (2026-01-20): Production-ready refactor with clean architecture
-- `v0.1.3` (2026-01-21): Time tracking system (Priority 2)
-
-**When to Bump Version:**
-
-Manual release-based versioning - bump when ready to release, not tied to individual commits.
-
-**Suggested Future Milestones:**
-- `v0.1.4`: Priority 3 (Export & Review) complete
-- `v0.1.5`: Priority 4 (Productivity Metrics) complete
-- `v0.1.6`: Priority 5 (Workflow Integration) complete
-- `v1.0.0`: Core features stable, ready for production
-
-**Release Process:**
-
-1. **Decide version bump** based on changes (patch/minor/major)
-2. **Update `pyproject.toml`** with new version number
-3. **Update `CHANGELOG.md`** with changes under new version heading
-4. **Update README.md** version badge if needed
-5. **Commit**: `git commit -m "chore: Bump version to vX.X.X"`
-6. **Tag**: `git tag -a vX.X.X -m "Release vX.X.X: <description>"`
-7. **Push**: `git push && git push --tags`
-
-See `CHANGELOG.md` for detailed version history.
+See `CHANGELOG.md` for detailed development history.
 
 ## Development Commands
 

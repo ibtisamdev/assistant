@@ -14,6 +14,7 @@ from ..application.config import AppConfig
 from ..application.container import Container
 from ..application.session_orchestrator import SessionOrchestrator
 from ..domain.exceptions import SessionNotFound, LLMError, StorageError
+from .profile_setup import ProfileSetupWizard
 
 console = Console()
 
@@ -158,6 +159,162 @@ def checkin(ctx, date, start, complete, skip, status):
         asyncio.run(_checkin())
     except KeyboardInterrupt:
         pass
+
+
+@cli.command()
+@click.argument("section", required=False)
+@click.option("--user-id", default="default", help="User profile ID")
+@click.pass_context
+def profile(ctx, section, user_id):
+    """
+    Setup or update user profile.
+
+    Run without arguments for full setup, or specify a section:
+
+    \b
+    Sections:
+      personal     - Personal info and communication style
+      schedule     - Work hours and energy patterns
+      productivity - Productivity habits and preferences
+      wellness     - Health and wellness schedule
+      work         - Work context and collaboration
+      learning     - Learning preferences and goals
+      priorities   - Top priorities and long-term goals
+      tasks        - Recurring tasks
+      blocked      - Blocked times
+    """
+    container = ctx.obj["container"]
+    storage = container.storage
+    wizard = ProfileSetupWizard()
+
+    async def _setup_profile():
+        try:
+            # Load existing profile
+            existing_profile = await storage.load_profile(user_id)
+
+            # Run wizard
+            if section:
+                if not existing_profile:
+                    rprint(
+                        f"[yellow]No existing profile found for '{user_id}'. Creating new profile.[/yellow]\n"
+                    )
+                    from ..domain.models.profile import UserProfile
+
+                    existing_profile = UserProfile(user_id=user_id)
+
+                updated_profile = wizard.setup_section(section, existing_profile)
+            else:
+                # Full setup
+                updated_profile = wizard.run_full_setup(existing_profile)
+
+            # Save updated profile
+            await storage.save_profile(user_id, updated_profile)
+            rprint(f"\n[bold green]✓ Profile saved successfully![/bold green]")
+
+        except KeyboardInterrupt:
+            rprint("\n[yellow]Profile setup cancelled.[/yellow]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_setup_profile())
+    except KeyboardInterrupt:
+        pass
+
+
+@cli.command()
+@click.option("--user-id", default="default", help="User profile ID")
+@click.pass_context
+def show_profile(ctx, user_id):
+    """Display current user profile."""
+    container = ctx.obj["container"]
+    storage = container.storage
+
+    async def _show():
+        try:
+            profile = await storage.load_profile(user_id)
+            if not profile:
+                rprint(f"[yellow]No profile found for '{user_id}'.[/yellow]")
+                rprint("[dim]Run 'uv run plan profile' to create one.[/dim]")
+                return
+
+            # Display profile in a readable format
+            from rich.panel import Panel
+            from rich.table import Table
+
+            # Create summary table
+            table = Table(show_header=False, box=None, padding=(0, 2))
+            table.add_column("Field", style="cyan")
+            table.add_column("Value")
+
+            # Basic info
+            if profile.personal_info.name:
+                table.add_row("Name", profile.personal_info.name)
+            if profile.personal_info.preferred_name:
+                table.add_row("Preferred Name", profile.personal_info.preferred_name)
+            table.add_row("Timezone", profile.timezone)
+            table.add_row("Communication", profile.personal_info.communication_style)
+
+            # Work schedule
+            table.add_row("", "")  # Spacer
+            table.add_row("[bold]Work Schedule[/bold]", "")
+            work_days = ", ".join(profile.work_hours.days[:3])
+            if len(profile.work_hours.days) > 3:
+                work_days += f", +{len(profile.work_hours.days) - 3} more"
+            table.add_row("Hours", f"{profile.work_hours.start} - {profile.work_hours.end}")
+            table.add_row("Days", work_days)
+
+            # Energy
+            table.add_row("", "")
+            table.add_row("[bold]Energy Pattern[/bold]", "")
+            table.add_row("Morning", profile.energy_pattern.morning)
+            table.add_row("Afternoon", profile.energy_pattern.afternoon)
+            table.add_row("Evening", profile.energy_pattern.evening)
+
+            # Productivity
+            if profile.productivity_habits.peak_productivity_time:
+                table.add_row("", "")
+                table.add_row("[bold]Productivity[/bold]", "")
+                table.add_row("Peak Time", profile.productivity_habits.peak_productivity_time)
+                table.add_row(
+                    "Focus Length", f"{profile.productivity_habits.focus_session_length} min"
+                )
+
+            # Work context
+            if profile.work_context.job_role:
+                table.add_row("", "")
+                table.add_row("[bold]Work Context[/bold]", "")
+                table.add_row("Role", profile.work_context.job_role)
+
+            # Priorities
+            if profile.top_priorities:
+                table.add_row("", "")
+                table.add_row("[bold]Top Priorities[/bold]", "")
+                for priority in profile.top_priorities[:3]:
+                    table.add_row("•", priority)
+
+            # Stats
+            table.add_row("", "")
+            table.add_row("[bold]Stats[/bold]", "")
+            table.add_row("Sessions", str(profile.planning_history.sessions_completed))
+            if profile.planning_history.last_session_date:
+                table.add_row("Last Session", profile.planning_history.last_session_date)
+
+            panel = Panel(
+                table,
+                title=f"User Profile: {user_id}",
+                border_style="green",
+            )
+            console.print(panel)
+
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    asyncio.run(_show())
 
 
 # Import command groups

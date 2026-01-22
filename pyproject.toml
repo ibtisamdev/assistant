@@ -10,8 +10,8 @@ packages = ["src"]
 
 [project]
 name = "personal-assistant"
-version = "0.1.3"
-description = "Daily Planning AI Agent - Production-ready agentic planning system with time tracking"
+version = "0.1.0-dev"
+description = "Daily Planning AI Agent - Development version (pre-release)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

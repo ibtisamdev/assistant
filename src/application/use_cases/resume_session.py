@@ -67,5 +67,9 @@ class ResumeSessionUseCase:
             elif memory.agent_state.state == State.feedback:
                 await self.create_plan_uc._handle_feedback(memory, session_id)
 
+        # Update planning history when resuming completes
+        if profile:
+            await self.create_plan_uc._update_planning_history(profile, memory, session_id)
+
         self.progress.print_success("Session resumed and completed!")
         return memory

@@ -60,6 +60,9 @@ class CreatePlanUseCase:
             elif memory.agent_state.state == State.feedback:
                 await self._handle_feedback(memory, session_id)
 
+        # Update planning history when plan is finalized
+        await self._update_planning_history(profile, memory, session_id)
+
         self.progress.print_success("Plan finalized!")
         return memory
 
@@ -144,3 +147,21 @@ class CreatePlanUseCase:
             agent_state = await self.agent.process_feedback(feedback, memory)
             memory.agent_state = agent_state
             await self.storage.save_session(session_id, memory)
+
+    async def _update_planning_history(
+        self, profile: UserProfile, memory: Memory, session_id: str
+    ) -> None:
+        """Update user profile with planning history insights."""
+        from ...domain.services.planning_service import PlanningService
+
+        planning_service = PlanningService()
+
+        # Update profile with session insights
+        updated_profile = planning_service.update_planning_history(profile, memory, session_id)
+
+        # Save updated profile
+        await self.storage.save_profile(profile.user_id, updated_profile)
+        logger.info(
+            f"Updated planning history for user {profile.user_id} "
+            f"(sessions: {updated_profile.planning_history.sessions_completed})"
+        )

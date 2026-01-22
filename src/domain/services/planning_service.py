@@ -1,8 +1,10 @@
 """Planning service - business logic for plan manipulation."""
 
 from typing import List, Tuple
+from datetime import datetime
 from ..models.planning import Plan, ScheduleItem
 from ..models.profile import UserProfile
+from ..models.session import Memory
 from ..exceptions import InvalidPlan
 
 
@@ -138,3 +140,106 @@ Total scheduled time: {duration} minutes ({duration // 60}h {duration % 60}m)"""
                 all_warnings.extend([f"{item.task}: {warning}" for warning in warnings])
 
         return len(all_warnings) == 0, all_warnings
+
+    def update_planning_history(
+        self, profile: UserProfile, memory: Memory, session_date: str
+    ) -> UserProfile:
+        """
+        Update user's planning history based on completed session.
+
+        This auto-learns from session patterns to improve future planning.
+
+        Args:
+            profile: User's profile to update
+            memory: Completed session memory
+            session_date: Date of the session (YYYY-MM-DD)
+
+        Returns:
+            Updated profile with learning insights
+        """
+        # Update basic stats
+        profile.planning_history.sessions_completed += 1
+        profile.planning_history.last_session_date = session_date
+
+        # Analyze session for patterns
+        revision_count = len(
+            [
+                msg
+                for msg in memory.conversation.messages
+                if msg.role == "user" and "feedback" in msg.content.lower()
+            ]
+        )
+
+        # Learn from session patterns
+        if revision_count == 0:
+            # Plan was accepted without changes - successful pattern
+            pattern = self._extract_successful_pattern(memory)
+            if pattern and pattern not in profile.planning_history.successful_patterns:
+                profile.planning_history.successful_patterns.append(pattern)
+                # Keep only last 10 patterns
+                profile.planning_history.successful_patterns = (
+                    profile.planning_history.successful_patterns[-10:]
+                )
+        elif revision_count > 0:
+            # Learn from adjustments
+            adjustments = self._extract_common_adjustments(memory)
+            for adjustment in adjustments:
+                if adjustment not in profile.planning_history.common_adjustments:
+                    profile.planning_history.common_adjustments.append(adjustment)
+                    # Keep only last 10
+                    profile.planning_history.common_adjustments = (
+                        profile.planning_history.common_adjustments[-10:]
+                    )
+
+        # Update timestamp
+        from datetime import datetime
+
+        profile.last_updated = datetime.now()
+
+        return profile
+
+    def _extract_successful_pattern(self, memory: Memory) -> str:
+        """Extract what made this session successful."""
+        plan = memory.agent_state.plan
+        if not plan:
+            return ""
+
+        # Analyze the plan structure
+        task_count = len(plan.schedule)
+        total_duration = plan.calculate_total_duration()
+        avg_task_duration = total_duration // task_count if task_count > 0 else 0
+
+        # Pattern based on structure
+        if task_count <= 5 and avg_task_duration >= 60:
+            return "Fewer tasks with longer time blocks"
+        elif task_count > 8 and avg_task_duration <= 30:
+            return "Many short tasks in quick succession"
+        elif task_count >= 6 and task_count <= 8:
+            return "Moderate number of balanced tasks"
+
+        return "Standard planning approach"
+
+    def _extract_common_adjustments(self, memory: Memory) -> List[str]:
+        """Extract common adjustments from feedback."""
+        adjustments = []
+
+        # Analyze conversation for adjustment keywords
+        feedback_messages = [
+            msg.content.lower() for msg in memory.conversation.messages if msg.role == "user"
+        ]
+
+        # Check for common adjustment patterns
+        all_feedback = " ".join(feedback_messages)
+
+        if "more time" in all_feedback or "longer" in all_feedback:
+            adjustments.append("Tends to need more time per task")
+        if "less time" in all_feedback or "shorter" in all_feedback:
+            adjustments.append("Prefers shorter task durations")
+        if "break" in all_feedback:
+            adjustments.append("Adjusts break timing")
+        if "priority" in all_feedback or "important" in all_feedback:
+            adjustments.append("Refines task priorities")
+        if "move" in all_feedback or "earlier" in all_feedback or "later" in all_feedback:
+            adjustments.append("Adjusts task timing/order")
+
+        return adjustments
