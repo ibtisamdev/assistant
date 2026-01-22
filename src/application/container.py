@@ -7,6 +7,7 @@ from ..domain.services.state_machine import StateMachine
 from ..domain.services.planning_service import PlanningService
 from ..domain.services.agent_service import AgentService
 from ..domain.services.time_tracking_service import TimeTrackingService
+from ..domain.services.export_service import ExportService
 from ..infrastructure.llm.openai_provider import OpenAIProvider
 from ..infrastructure.llm.retry import RetryStrategy
 from ..infrastructure.storage.json_storage import JSONStorage
@@ -33,6 +34,7 @@ class Container:
         self._session_formatter: Optional[SessionFormatter] = None
         self._progress_formatter: Optional[ProgressFormatter] = None
         self._time_tracking_service: Optional[TimeTrackingService] = None
+        self._export_service: Optional[ExportService] = None
 
     @property
     def llm_provider(self) -> OpenAIProvider:
@@ -130,3 +132,10 @@ class Container:
         if not self._time_tracking_service:
             self._time_tracking_service = TimeTrackingService()
         return self._time_tracking_service
+
+    @property
+    def export_service(self) -> ExportService:
+        """Get export service."""
+        if not self._export_service:
+            self._export_service = ExportService(self.config.storage)
+        return self._export_service

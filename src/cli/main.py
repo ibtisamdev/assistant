@@ -161,6 +161,108 @@ def checkin(ctx, date, start, complete, skip, status):
         pass
 
 
+@cli.command(name="export")
+@click.argument("date", required=False)
+@click.option("--output", type=click.Path(), help="Output file path")
+@click.pass_context
+def export_shortcut(ctx, date, output):
+    """Export plan to Markdown (shortcut for 'plan export')."""
+    from datetime import datetime
+    from pathlib import Path
+    from ..application.use_cases.export_plan import ExportPlanUseCase
+    from ..domain.exceptions import SessionNotFound
+
+    container = ctx.obj["container"]
+    use_case = ExportPlanUseCase(container)
+
+    # Default to today
+    session_id = date or datetime.now().strftime("%Y-%m-%d")
+    output_path = Path(output) if output else None
+
+    async def _export():
+        try:
+            await use_case.execute(session_id, output_path)
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint(f"[dim]Hint: Create a plan first with 'uv run plan start'[/dim]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_export())
+    except KeyboardInterrupt:
+        pass
+
+
+@cli.command(name="summary")
+@click.argument("date", required=False)
+@click.option("--output", type=click.Path(), help="Output file path")
+@click.pass_context
+def summary_shortcut(ctx, date, output):
+    """Export end-of-day summary (shortcut for 'plan summary')."""
+    from datetime import datetime
+    from pathlib import Path
+    from ..application.use_cases.export_summary import ExportSummaryUseCase
+    from ..domain.exceptions import SessionNotFound
+
+    container = ctx.obj["container"]
+    use_case = ExportSummaryUseCase(container)
+
+    # Default to today
+    session_id = date or datetime.now().strftime("%Y-%m-%d")
+    output_path = Path(output) if output else None
+
+    async def _export():
+        try:
+            await use_case.execute(session_id, output_path)
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint(f"[dim]Hint: Create a plan first with 'uv run plan start'[/dim]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_export())
+    except KeyboardInterrupt:
+        pass
+
+
+@cli.command(name="export-all")
+@click.argument("date", required=False)
+@click.pass_context
+def export_all_shortcut(ctx, date):
+    """Export both plan and summary (shortcut for 'plan export-all')."""
+    from datetime import datetime
+    from ..application.use_cases.export_all import ExportAllUseCase
+    from ..domain.exceptions import SessionNotFound
+
+    container = ctx.obj["container"]
+    use_case = ExportAllUseCase(container)
+
+    # Default to today
+    session_id = date or datetime.now().strftime("%Y-%m-%d")
+
+    async def _export():
+        try:
+            await use_case.execute(session_id)
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint(f"[dim]Hint: Create a plan first with 'uv run plan start'[/dim]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_export())
+    except KeyboardInterrupt:
+        pass
+
+
 @cli.command()
 @click.argument("section", required=False)
 @click.option("--user-id", default="default", help="User profile ID")

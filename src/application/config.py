@@ -41,6 +41,8 @@ class StorageConfig(BaseSettings):
     backend: str = "json"
     sessions_dir: Path = Path("sessions")
     profiles_dir: Path = Path("profiles")
+    plans_export_dir: Path = Path("data/plans")
+    summaries_export_dir: Path = Path("data/summaries")
     cache_ttl: int = 300
     enable_compression: bool = False
 
@@ -48,7 +50,9 @@ class StorageConfig(BaseSettings):
     db_path: Optional[Path] = None
     connection_pool_size: int = 5
 
-    @field_validator("sessions_dir", "profiles_dir", mode="before")
+    @field_validator(
+        "sessions_dir", "profiles_dir", "plans_export_dir", "summaries_export_dir", mode="before"
+    )
     @classmethod
     def convert_to_path(cls, v):
         """Convert string to Path."""
@@ -99,7 +103,7 @@ class AppConfig(BaseSettings):
 
     # Feature flags
     enable_multi_agent: bool = False
-    enable_export: bool = False
+    enable_export: bool = True
     enable_calendar_sync: bool = False
 
     @classmethod

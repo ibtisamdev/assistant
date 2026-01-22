@@ -11,16 +11,6 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
 
 ## Up Next
 
-### Priority 3: Export & Review
-- [ ] Markdown export - `python main.py --export`
-  - Export plan to `data/plans/YYYY-MM-DD.md`
-  - Include: schedule, time estimates, priorities, notes
-  - Add checkboxes for manual tracking
-- [ ] Daily summary export
-  - Export actual time spent, completion status
-  - File: `data/summaries/YYYY-MM-DD-summary.md`
-  - Shows: planned vs actual time, completed tasks, notes
-
 ### Priority 4: Productivity Metrics
 - [ ] Time categorization
   - Tag tasks as: productive, meetings, admin, breaks, wasted
@@ -55,6 +45,42 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
 - [ ] Web UI for better visualization
 
 ## Completed
+
+### Priority 3: Export & Review - Completed 2026-01-22
+- [x] **Markdown export** - `uv run plan export [DATE]`
+  - Export plan to `data/plans/YYYY-MM-DD.md`
+  - Include: schedule, time estimates, priorities, notes
+  - Checkboxes for manual tracking
+  - Human-readable date headers
+  - Total estimated time in footer
+- [x] **Daily summary export** - `uv run plan summary [DATE]`
+  - Export actual time spent, completion status
+  - File: `data/summaries/YYYY-MM-DD-summary.md`
+  - Shows: planned vs actual time, completed tasks, notes
+  - Completion overview table with stats
+  - Time analysis with variance indicators
+  - Graceful handling of missing tracking data (shows N/A)
+- [x] **Combined export** - `uv run plan export-all [DATE]`
+  - Exports both plan and summary in one command
+- [x] **Top-level shortcuts**
+  - `uv run export` - Quick plan export
+  - `uv run summary` - Quick summary export
+  - `uv run export-all` - Quick combined export
+
+**Key Features:**
+- MarkdownExporter for plan files with checkboxes
+- SummaryExporter for end-of-day reviews with time analysis
+- ExportService orchestration layer
+- Lazy directory creation (data/plans/, data/summaries/)
+- Custom output path support
+- 46 new tests (all passing)
+- Full backward compatibility
+
+**Impact:**
+- Morning workflow: Export plan with checkboxes for manual tracking
+- Evening workflow: Export summary for review and reflection
+- Data preservation: Plans saved as portable Markdown files
+- Foundation for Priority 4 (productivity metrics analysis)
 
 ### Profile System Expansion - Completed 2026-01-22
 - [x] **Expanded User Profile** - 6 new context categories

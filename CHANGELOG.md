@@ -7,9 +7,182 @@ This project is currently in **development mode (v0.1.0-dev)**. All changes are 
 ## [Unreleased] - Development (v0.1.0-dev)
 
 ### Planned Features
-- Priority 3: Markdown export and daily summaries  
 - Priority 4: Productivity metrics and analytics
 - Priority 5: Workflow integration (quick start, templates, recurring tasks)
+
+### 2026-01-22: Export & Review (Priority 3)
+
+Complete implementation of Markdown export for daily plans and end-of-day summaries.
+
+### Added
+
+**Markdown Plan Export:**
+- `uv run plan export [DATE]` - Export plan to Markdown with checkboxes
+- `uv run export [DATE]` - Top-level shortcut
+- Output location: `data/plans/YYYY-MM-DD.md`
+- Features:
+  - Checkboxes (`- [ ]`) for manual tracking
+  - Time estimates in human-readable format (~1h 30m)
+  - Priority tags for high/low priority tasks
+  - Human-readable date headers (January 22, 2026)
+  - Total estimated time in footer
+  - Supports custom output path with `--output`
+
+**Daily Summary Export:**
+- `uv run plan summary [DATE]` - Export end-of-day summary
+- `uv run summary [DATE]` - Top-level shortcut
+- Output location: `data/summaries/YYYY-MM-DD-summary.md`
+- Features:
+  - Completion overview table with stats
+  - Time analysis table (Estimated vs Actual vs Variance)
+  - Variance indicators for over/under time
+  - Sections for completed, in-progress, skipped, and not-started tasks
+  - Graceful handling of missing tracking data (shows N/A)
+  - Quick stats display in terminal after export
+  - Supports custom output path with `--output`
+
+**Combined Export:**
+- `uv run plan export-all [DATE]` - Export both plan and summary
+- `uv run export-all [DATE]` - Top-level shortcut
+- Supports custom paths with `--plan-output` and `--summary-output`
+
+**Infrastructure:**
+- `MarkdownExporter` - Converts Plan to Markdown with checkboxes
+- `SummaryExporter` - Converts Memory to summary Markdown with time analysis
+- `ExportService` - Orchestrates exports with result tracking
+- `ExportResult` dataclass with success, file_path, error, stats
+- Lazy directory creation (creates `data/plans/` and `data/summaries/` on first export)
+- Async file I/O with aiofiles
+- Integration in dependency injection container
+
+**Use Cases:**
+- `ExportPlanUseCase` - Business logic for plan export
+- `ExportSummaryUseCase` - Business logic for summary export with stats display
+- `ExportAllUseCase` - Combined export with results for both
+
+**Configuration:**
+- `StorageConfig.plans_export_dir` - Default: `data/plans`
+- `StorageConfig.summaries_export_dir` - Default: `data/summaries`
+- `AppConfig.enable_export` - Now enabled by default
+
+### Testing
+
+- **46 new tests** for export functionality:
+  - MarkdownExporter: 11 tests (string formatting, file creation, edge cases)
+  - SummaryExporter: 10 tests (stats, tracking data, N/A handling)
+  - ExportService: 17 tests (plan export, summary export, combined export)
+  - Date/duration formatting: 8 tests
+- **All 93 tests passing**
+- Test coverage includes async file operations, edge cases, and error handling
+
+### Technical Details
+
+**New Files:**
+- `src/infrastructure/export/markdown.py` (130 lines) - Plan exporter
+- `src/infrastructure/export/summary.py` (220 lines) - Summary exporter
+- `src/domain/services/export_service.py` (180 lines) - Export orchestration
+- `src/application/use_cases/export_plan.py` (55 lines)
+- `src/application/use_cases/export_summary.py` (85 lines)
+- `src/application/use_cases/export_all.py` (75 lines)
+- `tests/unit/infrastructure/test_export.py` (290 lines)
+- `tests/unit/domain/test_export_service.py` (200 lines)
+
+**Modified Files:**
+- `src/application/config.py` - Added export directories, enabled feature flag
+- `src/application/container.py` - Added ExportService dependency
+- `src/cli/commands/plan.py` - Updated export command, added summary and export-all
+- `src/cli/main.py` - Added top-level export, summary, export-all shortcuts
+- `src/infrastructure/export/__init__.py` - Exports MarkdownExporter, SummaryExporter
+- `src/domain/services/__init__.py` - Exports ExportService
+- `src/application/use_cases/__init__.py` - Exports new use cases
+- `.gitignore` - Added `data/` directory
+
+### Usage Examples
+
+```bash
+# Export today's plan with checkboxes
+uv run plan export
+# or shortcut
+uv run export
+
+# Export specific date
+uv run plan export 2026-01-20
+
+# Export to custom path
+uv run plan export --output ~/Desktop/my-plan.md
+
+# Export end-of-day summary
+uv run plan summary
+# or shortcut
+uv run summary
+
+# Export both plan and summary
+uv run plan export-all
+# or shortcut
+uv run export-all
+
+# All commands support --date option
+uv run plan summary 2026-01-20
+```
+
+### Example Output
+
+**Plan Export (data/plans/2026-01-22.md):**
+```markdown
+# Daily Plan - January 22, 2026
+
+## Schedule
+
+- [ ] **09:00-10:00** - Morning standup (~1h) [high]
+- [ ] **10:00-12:00** - Deep work session (~2h) [high]
+- [ ] **12:00-13:00** - Lunch break (~1h) [low]
+
+## Top Priorities
+
+1. Complete API integration
+2. Review pull requests
+
+## Notes
+
+Focus on high-priority items today.
+
+---
+*Generated by Daily Planning Assistant*
+*Total estimated time: 4h*
+```
+
+**Summary Export (data/summaries/2026-01-22-summary.md):**
+```markdown
+# Daily Summary - January 22, 2026
+
+## Completion Overview
+
+| Status | Count |
+|--------|-------|
+| Completed | 3 |
+| Skipped | 1 |
+
+**Completion Rate:** 75%
+
+## Time Analysis
+
+| Task | Estimated | Actual | Variance |
+|------|-----------|--------|----------|
+| Morning standup | 1h | 1h 15m | +15m |
+| Deep work | 2h | 1h 45m | -15m |
+...
+```
+
+### Impact
+
+This release completes Priority 3 from the roadmap:
+- ✅ Morning workflow: Export plan with checkboxes for manual tracking
+- ✅ Evening workflow: Export summary for review and reflection
+- ✅ Data preservation: Plans saved as portable Markdown files
+- ✅ Graceful degradation: Works even without time tracking data
+- ✅ Foundation for Priority 4 (productivity metrics can analyze exported data)
+
+---
 
 ### 2026-01-22: Expanded User Profile System
 
@@ -523,7 +696,7 @@ This project uses **development versioning** until production-ready:
 - ✅ Priority 1: Stability (Done)
 - ✅ Priority 2: Time Tracking (Done)
 - ✅ Profile System (Done)
-- ⏳ Priority 3: Export & Review
+- ✅ Priority 3: Export & Review (Done)
 - ⏳ Priority 4: Productivity Metrics
 - ⏳ Priority 5: Workflow Integration
 

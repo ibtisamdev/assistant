@@ -95,15 +95,107 @@ def show_plan(ctx, date):
 
 
 @plan_group.command(name="export")
-@click.argument("date")
-@click.option("--format", type=click.Choice(["md", "pdf", "ical"]), default="md")
+@click.argument("date", required=False)
 @click.option("--output", type=click.Path(), help="Output file path")
 @click.pass_context
-def export_plan(ctx, date, format, output):
-    """Export plan to file (FUTURE FEATURE)."""
-    rprint("[yellow]📦 Export feature coming soon![/yellow]")
-    rprint(f"[dim]  Will export {date} to {format} format[/dim]")
-    # TODO: Implement when export infrastructure is ready
+def export_plan(ctx, date, output):
+    """Export plan to Markdown file for manual tracking."""
+    from datetime import datetime
+    from pathlib import Path
+    from ...application.use_cases.export_plan import ExportPlanUseCase
+
+    container = ctx.obj["container"]
+    use_case = ExportPlanUseCase(container)
+
+    # Default to today
+    session_id = date or datetime.now().strftime("%Y-%m-%d")
+    output_path = Path(output) if output else None
+
+    async def _export():
+        try:
+            await use_case.execute(session_id, output_path)
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint(f"[dim]Hint: Create a plan first with 'uv run plan create'[/dim]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_export())
+    except KeyboardInterrupt:
+        pass
+
+
+@plan_group.command(name="summary")
+@click.argument("date", required=False)
+@click.option("--output", type=click.Path(), help="Output file path")
+@click.pass_context
+def export_summary(ctx, date, output):
+    """Export end-of-day summary with time analysis."""
+    from datetime import datetime
+    from pathlib import Path
+    from ...application.use_cases.export_summary import ExportSummaryUseCase
+
+    container = ctx.obj["container"]
+    use_case = ExportSummaryUseCase(container)
+
+    # Default to today
+    session_id = date or datetime.now().strftime("%Y-%m-%d")
+    output_path = Path(output) if output else None
+
+    async def _export():
+        try:
+            await use_case.execute(session_id, output_path)
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint(f"[dim]Hint: Create a plan first with 'uv run plan create'[/dim]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_export())
+    except KeyboardInterrupt:
+        pass
+
+
+@plan_group.command(name="export-all")
+@click.argument("date", required=False)
+@click.option("--plan-output", type=click.Path(), help="Plan output file path")
+@click.option("--summary-output", type=click.Path(), help="Summary output file path")
+@click.pass_context
+def export_all(ctx, date, plan_output, summary_output):
+    """Export both plan and summary to Markdown files."""
+    from datetime import datetime
+    from pathlib import Path
+    from ...application.use_cases.export_all import ExportAllUseCase
+
+    container = ctx.obj["container"]
+    use_case = ExportAllUseCase(container)
+
+    # Default to today
+    session_id = date or datetime.now().strftime("%Y-%m-%d")
+    plan_path = Path(plan_output) if plan_output else None
+    summary_path = Path(summary_output) if summary_output else None
+
+    async def _export():
+        try:
+            await use_case.execute(session_id, plan_path, summary_path)
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint(f"[dim]Hint: Create a plan first with 'uv run plan create'[/dim]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_export())
+    except KeyboardInterrupt:
+        pass
 
 
 @plan_group.command(name="checkin")
