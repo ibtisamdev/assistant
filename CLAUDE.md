@@ -23,7 +23,7 @@ pip install -e .
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Run the agent
-python main.py
+day start
 ```
 
 ### Environment Variables

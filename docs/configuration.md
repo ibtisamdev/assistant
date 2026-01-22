@@ -14,7 +14,7 @@
 
 3. Run the application:
    ```bash
-   plan start
+   day start
    ```
 
 ## Configuration Priority
@@ -51,7 +51,7 @@ The application loads configuration in this order (highest to lowest priority):
 Enable debug logging to see configuration loading details:
 
 ```bash
-plan start --debug
+day start --debug
 ```
 
 You should see messages like:

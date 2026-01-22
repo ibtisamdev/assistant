@@ -16,7 +16,7 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
   - Tag tasks as: productive, meetings, admin, breaks, wasted
   - LLM can suggest categories, user confirms
   - Track in session data
-- [ ] Daily stats command - `python main.py --stats [date]`
+- [ ] Daily stats command - `day stats [date]`
   - Total productive time vs wasted time
   - Task completion rate
   - Most time-consuming activities
@@ -26,12 +26,12 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
   - Identify patterns (productive times, common time sinks)
 
 ### Priority 5: Workflow Integration
-- [ ] Quick start mode - `python main.py --quick`
+- [ ] Quick start mode - `day quick`
   - Skip questions if no changes from yesterday
   - Use profile + previous day's pattern
 - [ ] Recurring task templates
   - Save common daily patterns (work day, weekend, etc.)
-  - Command: `python main.py --template work-day`
+  - Command: `day template work-day`
 - [ ] Import yesterday's incomplete tasks
   - Auto-suggest unfinished tasks from previous day
 
@@ -47,25 +47,22 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
 ## Completed
 
 ### Priority 3: Export & Review - Completed 2026-01-22
-- [x] **Markdown export** - `uv run plan export [DATE]`
+- [x] **Markdown export** - `day export [DATE]`
   - Export plan to `data/plans/YYYY-MM-DD.md`
   - Include: schedule, time estimates, priorities, notes
   - Checkboxes for manual tracking
   - Human-readable date headers
   - Total estimated time in footer
-- [x] **Daily summary export** - `uv run plan summary [DATE]`
+- [x] **Daily summary export** - `day summary [DATE]`
   - Export actual time spent, completion status
   - File: `data/summaries/YYYY-MM-DD-summary.md`
   - Shows: planned vs actual time, completed tasks, notes
   - Completion overview table with stats
   - Time analysis with variance indicators
   - Graceful handling of missing tracking data (shows N/A)
-- [x] **Combined export** - `uv run plan export-all [DATE]`
+- [x] **Combined export** - `day export-all [DATE]`
   - Exports both plan and summary in one command
-- [x] **Top-level shortcuts**
-  - `uv run export` - Quick plan export
-  - `uv run summary` - Quick summary export
-  - `uv run export-all` - Quick combined export
+
 
 **Key Features:**
 - MarkdownExporter for plan files with checkboxes
@@ -90,11 +87,11 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
   - WorkContext (job role, meeting-heavy days, deadline patterns, collaboration preference, typical meeting duration)
   - LearningPreferences (learning style, skill development goals, areas of interest, preferred learning time)
   - PlanningHistory (auto-learned patterns: successful approaches, avoided patterns, common adjustments, feedback notes, session stats)
-- [x] **Profile Setup Wizard** - `uv run plan profile`
+- [x] **Profile Setup Wizard** - `day profile`
   - Full interactive setup wizard (530 lines, 9 sections)
-  - Section-based editing: `uv run plan profile <section>`
+  - Section-based editing: `day profile <section>`
   - Sections: personal, schedule, productivity, wellness, work, learning, priorities, tasks, blocked
-  - `uv run plan show-profile` - Display formatted profile with Rich
+  - `day show-profile` - Display formatted profile with Rich
   - Multi-user support with `--user-id` flag
 - [x] **Auto-Learning System**
   - Tracks successful planning patterns (no changes = successful)
@@ -129,7 +126,7 @@ Enhance the assistant with robust time tracking and analytics capabilities to un
 - Foundation for Priority 4 (analytics) and Priority 5 (workflow)
 
 ### Priority 2: Time Tracking - Completed 2026-01-21
-- [x] **Check-in system** - `uv run plan checkin`
+- [x] **Check-in system** - `day checkin`
   - Interactive menu with 7 options (view, start, complete, skip, stats, edit, exit)
   - Quick action flags: `--start`, `--complete`, `--skip`, `--status`
   - Shows today's plan with progress indicators

@@ -17,8 +17,7 @@ Complete implementation of Markdown export for daily plans and end-of-day summar
 ### Added
 
 **Markdown Plan Export:**
-- `uv run plan export [DATE]` - Export plan to Markdown with checkboxes
-- `uv run export [DATE]` - Top-level shortcut
+- `day export [DATE]` - Export plan to Markdown with checkboxes
 - Output location: `data/plans/YYYY-MM-DD.md`
 - Features:
   - Checkboxes (`- [ ]`) for manual tracking
@@ -29,8 +28,7 @@ Complete implementation of Markdown export for daily plans and end-of-day summar
   - Supports custom output path with `--output`
 
 **Daily Summary Export:**
-- `uv run plan summary [DATE]` - Export end-of-day summary
-- `uv run summary [DATE]` - Top-level shortcut
+- `day summary [DATE]` - Export end-of-day summary
 - Output location: `data/summaries/YYYY-MM-DD-summary.md`
 - Features:
   - Completion overview table with stats
@@ -42,8 +40,7 @@ Complete implementation of Markdown export for daily plans and end-of-day summar
   - Supports custom output path with `--output`
 
 **Combined Export:**
-- `uv run plan export-all [DATE]` - Export both plan and summary
-- `uv run export-all [DATE]` - Top-level shortcut
+- `day export-all [DATE]` - Export both plan and summary
 - Supports custom paths with `--plan-output` and `--summary-output`
 
 **Infrastructure:**
@@ -101,28 +98,22 @@ Complete implementation of Markdown export for daily plans and end-of-day summar
 
 ```bash
 # Export today's plan with checkboxes
-uv run plan export
-# or shortcut
-uv run export
+day export
 
 # Export specific date
-uv run plan export 2026-01-20
+day export 2026-01-20
 
 # Export to custom path
-uv run plan export --output ~/Desktop/my-plan.md
+day export --output ~/Desktop/my-plan.md
 
 # Export end-of-day summary
-uv run plan summary
-# or shortcut
-uv run summary
+day summary
 
 # Export both plan and summary
-uv run plan export-all
-# or shortcut
-uv run export-all
+day export-all
 
 # All commands support --date option
-uv run plan summary 2026-01-20
+day summary 2026-01-20
 ```
 
 ### Example Output
@@ -199,10 +190,10 @@ Complete expansion of the user profile memory to capture comprehensive context a
 - `PlanningHistory` - Auto-learned patterns: successful approaches, avoided patterns, common adjustments, feedback notes, session stats
 
 **Profile Setup Wizard:**
-- `uv run plan profile` - Full interactive setup wizard
-- `uv run plan profile <section>` - Edit specific section
+- `day profile` - Full interactive setup wizard
+- `day profile <section>` - Edit specific section
   - Sections: personal, schedule, productivity, wellness, work, learning, priorities, tasks, blocked
-- `uv run plan show-profile` - Display current profile summary with Rich formatting
+- `day show-profile` - Display current profile summary with Rich formatting
 - `--user-id` flag for multi-user support
 
 **Auto-Learning System:**
@@ -293,21 +284,21 @@ PlanningHistory(successful_patterns, avoided_patterns, sessions_completed, ...)
 
 ```bash
 # Full profile setup (first time - guided wizard)
-uv run plan profile
+day profile
 [Interactive prompts for all 9 sections]
 
 # Edit specific section
-uv run plan profile productivity
-uv run plan profile wellness
-uv run plan profile work
+day profile productivity
+day profile wellness
+day profile work
 
 # View current profile
-uv run plan show-profile
+day show-profile
 [Displays formatted profile with stats]
 
 # Multi-user support
-uv run plan profile --user-id john
-uv run plan show-profile --user-id john
+day profile --user-id john
+day show-profile --user-id john
 ```
 
 ### Profile Setup Wizard Features
@@ -395,8 +386,7 @@ Complete implementation of time tracking and progress monitoring capabilities.
   - `validate_tracking_consistency()` - Data validation
 
 **Check-in System:**
-- `uv run plan checkin` - Interactive time tracking command
-- `uv run checkin` - Top-level shortcut command
+- `day checkin` - Interactive time tracking command
 - Interactive menu with 7 options:
   1. View plan with progress indicators
   2. Start a task
@@ -473,18 +463,18 @@ Complete implementation of time tracking and progress monitoring capabilities.
 
 ```bash
 # Interactive check-in
-uv run plan checkin
+day checkin
 
 # Quick actions
-uv run plan checkin --start "Write report"
-uv run plan checkin --complete "Team meeting"
-uv run plan checkin --skip "Optional task"
+day checkin --start "Write report"
+day checkin --complete "Team meeting"
+day checkin --skip "Optional task"
 
 # View progress only
-uv run plan checkin --status
+day checkin --status
 
 # Check in for specific date
-uv run plan checkin --date 2026-01-20
+day checkin --date 2026-01-20
 ```
 
 ### Impact
@@ -513,14 +503,13 @@ Complete architectural overhaul, transforming the prototype into a production-re
 - Retry logic with exponential backoff for LLM calls
 
 **CLI Commands:**
-- `plan start` - Quick start command
-- `plan list` - List all sessions
-- `plan plan create` - Create new plan
-- `plan plan revise` - Revise existing plan
-- `plan plan show <date>` - Display saved plan
-- `plan session list` - Session management
-- `plan session info <date>` - Session details
-- `plan session delete <date>` - Delete session
+- `day start` - Quick start command
+- `day list` - List all sessions
+- `day create` - Create new plan
+- `day revise` - Revise existing plan
+- `day show <date>` - Display saved plan
+- `day info <date>` - Session details
+- `day delete <date>` - Delete session
 
 **Architecture:**
 - Domain layer with pure business logic
@@ -539,7 +528,7 @@ Complete architectural overhaul, transforming the prototype into a production-re
 ### Changed
 
 **Breaking Changes:**
-- New CLI interface (use `uv run plan` instead of `python main.py`)
+- New CLI interface (use `day` instead of `python main.py`)
 - Configuration moved to `config/default.yaml`
 - Modular file structure (50+ files vs 6 files)
 - All operations are now async

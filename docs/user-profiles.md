@@ -26,23 +26,23 @@ The Personal Planning Assistant now includes an **expanded user profile system**
 
 ```bash
 # Full guided setup (recommended for first time)
-uv run plan profile
+day profile
 
 # Setup specific section
-uv run plan profile personal
-uv run plan profile productivity
-uv run plan profile wellness
-uv run plan profile work
-uv run plan profile learning
-uv run plan profile priorities
-uv run plan profile tasks
-uv run plan profile blocked
+day profile personal
+day profile productivity
+day profile wellness
+day profile work
+day profile learning
+day profile priorities
+day profile tasks
+day profile blocked
 ```
 
 ### View Your Profile
 
 ```bash
-uv run plan show-profile
+day show-profile
 ```
 
 ## Profile Sections in Detail
@@ -168,31 +168,31 @@ After each completed session, the agent automatically:
 
 ```bash
 # Full interactive setup
-uv run plan profile
+day profile
 
 # Edit specific section
-uv run plan profile personal
-uv run plan profile schedule       # Work hours & energy
-uv run plan profile productivity
-uv run plan profile wellness
-uv run plan profile work
-uv run plan profile learning
-uv run plan profile priorities
-uv run plan profile tasks          # Recurring tasks
-uv run plan profile blocked        # Blocked times
+day profile personal
+day profile schedule       # Work hours & energy
+day profile productivity
+day profile wellness
+day profile work
+day profile learning
+day profile priorities
+day profile tasks          # Recurring tasks
+day profile blocked        # Blocked times
 
 # Specify user (multi-user support)
-uv run plan profile --user-id john
+day profile --user-id john
 ```
 
 ### View Profile
 
 ```bash
 # Show current profile summary
-uv run plan show-profile
+day show-profile
 
 # Show specific user's profile
-uv run plan show-profile --user-id john
+day show-profile --user-id john
 ```
 
 ## Examples
@@ -200,7 +200,7 @@ uv run plan show-profile --user-id john
 ### Example: Full Profile Setup
 
 ```bash
-$ uv run plan profile
+$ day profile
 
 ============================================================
 Welcome to the Personal Planning Assistant Profile Setup
@@ -246,7 +246,7 @@ Profile setup complete!
 ### Example: View Profile
 
 ```bash
-$ uv run plan show-profile
+$ day show-profile
 
 ╭─────────────── User Profile: default ────────────────╮
 │ Field                   Value                         │
@@ -323,7 +323,7 @@ If you're upgrading from v0.1.x:
 
 1. Old profiles in `profiles/` will be **incompatible** with the new schema
 2. Delete or backup old profiles: `rm profiles/*.json`
-3. Run `uv run plan profile` to create a fresh profile
+3. Run `day profile` to create a fresh profile
 4. New profile will have sensible defaults for all fields
 
 ## Advanced: Direct File Editing
@@ -361,7 +361,7 @@ For power users, you can edit `profiles/default.json` directly:
 ls -la profiles/
 
 # Create new profile
-uv run plan profile
+day profile
 ```
 
 ### Reset profile to defaults
@@ -371,7 +371,7 @@ uv run plan profile
 rm profiles/default.json
 
 # Create fresh profile
-uv run plan profile
+day profile
 ```
 
 ### Planning history not updating
@@ -382,7 +382,7 @@ The planning history auto-updates when:
 
 Check logs for errors:
 ```bash
-uv run plan start --debug
+day start --debug
 ```
 
 ## Future Enhancements

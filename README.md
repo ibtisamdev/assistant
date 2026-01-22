@@ -63,39 +63,43 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ```bash
 # Quick start - create or resume today's plan
-uv run plan start
+day start
+
+# Start plan for specific date
+day start 2026-01-23
 
 # List all saved sessions
-uv run plan list
-
-# Create a new plan
-uv run plan plan create
+day list
 
 # Revise an existing plan
-uv run plan plan revise
+day revise
 
 # View a saved plan
-uv run plan plan show 2026-01-19
+day show 2026-01-19
 
 # Time tracking
-uv run plan checkin                      # Interactive check-in
-uv run plan checkin --start "Task name"  # Quick start
-uv run plan checkin --complete "Task"    # Quick complete
-uv run plan checkin --status             # View progress
+day checkin                      # Interactive check-in
+day checkin --start "Task name"  # Quick start
+day checkin --complete "Task"    # Quick complete
+day checkin --status             # View progress
+
+# Export commands
+day export                       # Export today's plan to Markdown
+day summary                      # Export end-of-day summary
+day export-all                   # Export both files
 
 # Profile management
-uv run plan profile                      # Full guided setup
-uv run plan profile productivity         # Edit specific section
-uv run plan show-profile                 # View current profile
+day profile                      # Full guided setup
+day profile productivity         # Edit specific section
+day show-profile                 # View current profile
 
 # Session management
-uv run plan session list
-uv run plan session info 2026-01-19
-uv run plan session delete 2026-01-19
+day delete 2026-01-19            # Delete a session
+day info 2026-01-19              # Show session details
 
 # Get help
-uv run plan --help
-uv run plan plan --help
+day --help
+day --version
 ```
 
 The agent will:

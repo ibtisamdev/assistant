@@ -3,12 +3,14 @@
 import asyncio
 import logging
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 import click
 from rich.console import Console
 from rich import print as rprint
 from rich.logging import RichHandler
+from rich.prompt import Confirm
 
 from ..application.config import AppConfig
 from ..application.container import Container
@@ -30,6 +32,7 @@ def setup_logging(level: str = "INFO"):
 
 
 @click.group()
+@click.version_option(version="0.1.0-dev", prog_name="day")
 @click.option("--debug", is_flag=True, help="Enable debug mode")
 @click.option("--config", type=click.Path(exists=True), help="Config file path")
 @click.pass_context
@@ -37,7 +40,7 @@ def cli(ctx, debug, config):
     """
     Daily Planning AI Agent
 
-    Your personalized planning assistant for creating realistic daily plans.
+    Your personalized assistant for creating realistic daily plans.
     """
     # Setup logging
     log_level = "DEBUG" if debug else "INFO"
@@ -65,21 +68,20 @@ def cli(ctx, debug, config):
         sys.exit(1)
 
 
-# ===== Quick Commands (Shortcuts) =====
+# ===== Core Planning Commands =====
 
 
 @cli.command()
-@click.option("--date", help="Session date (YYYY-MM-DD)")
-@click.option("--new", is_flag=True, help="Force create new session")
+@click.argument("date", required=False)
 @click.pass_context
-def start(ctx, date, new):
-    """Quick start - create or resume today's plan."""
+def start(ctx, date):
+    """Create or resume a daily plan (smart default)."""
     container = ctx.obj["container"]
     orchestrator = SessionOrchestrator(container)
 
     async def _start():
         try:
-            memory = await orchestrator.run_new_session(date, force_new=new)
+            memory = await orchestrator.run_new_session(date, force_new=False)
             rprint("\n[bold green]✓ Session complete![/bold green]\n")
         except KeyboardInterrupt:
             rprint("\n[yellow]Session interrupted. Progress saved.[/yellow]")
@@ -95,6 +97,58 @@ def start(ctx, date, new):
         asyncio.run(_start())
     except KeyboardInterrupt:
         pass
+
+
+@cli.command()
+@click.argument("date", required=False)
+@click.pass_context
+def revise(ctx, date):
+    """Revise an existing plan."""
+    container = ctx.obj["container"]
+    orchestrator = SessionOrchestrator(container)
+
+    async def _revise():
+        try:
+            rprint("[bold yellow]Revising plan...[/bold yellow]\n")
+            memory = await orchestrator.run_revise(date)
+            rprint("\n[bold green]✓ Plan revised![/bold green]")
+        except SessionNotFound as e:
+            rprint(f"[bold red]Error:[/bold red] {e}")
+            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
+        except KeyboardInterrupt:
+            rprint("\n[yellow]Cancelled. Progress saved.[/yellow]")
+        except Exception as e:
+            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            if ctx.obj["config"].debug:
+                raise
+
+    try:
+        asyncio.run(_revise())
+    except KeyboardInterrupt:
+        pass
+
+
+@cli.command()
+@click.argument("date")
+@click.pass_context
+def show(ctx, date):
+    """Display a saved plan."""
+    container = ctx.obj["container"]
+
+    async def _show():
+        storage = container.storage
+        memory = await storage.load_session(date)
+
+        if not memory or not memory.agent_state.plan:
+            rprint(f"[red]No plan found for {date}[/red]")
+            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
+            return
+
+        formatter = container.plan_formatter
+        panel = formatter.format_plan(memory.agent_state.plan)
+        console.print(panel)
+
+    asyncio.run(_show())
 
 
 @cli.command()
@@ -117,18 +171,19 @@ def list(ctx):
     asyncio.run(_list())
 
 
+# ===== Time Tracking =====
+
+
 @cli.command()
-@click.option("--date", help="Session date (defaults to today)")
+@click.argument("date", required=False)
 @click.option("--start", help="Quick start task by name")
 @click.option("--complete", help="Quick complete task by name")
 @click.option("--skip", help="Quick skip task by name")
 @click.option("--status", is_flag=True, help="Show progress status only")
 @click.pass_context
 def checkin(ctx, date, start, complete, skip, status):
-    """Check in and track task progress (shortcut)."""
-    from datetime import datetime
+    """Check in and track task progress."""
     from ..application.use_cases.checkin import CheckinUseCase
-    from ..domain.exceptions import SessionNotFound
 
     container = ctx.obj["container"]
     use_case = CheckinUseCase(container)
@@ -147,7 +202,7 @@ def checkin(ctx, date, start, complete, skip, status):
             )
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint(f"[dim]Hint: Create a plan first with 'uv run plan start'[/dim]")
+            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
         except KeyboardInterrupt:
             rprint("\n[yellow]Check-in cancelled.[/yellow]")
         except Exception as e:
@@ -161,16 +216,16 @@ def checkin(ctx, date, start, complete, skip, status):
         pass
 
 
-@cli.command(name="export")
+# ===== Export Commands =====
+
+
+@cli.command()
 @click.argument("date", required=False)
 @click.option("--output", type=click.Path(), help="Output file path")
 @click.pass_context
-def export_shortcut(ctx, date, output):
-    """Export plan to Markdown (shortcut for 'plan export')."""
-    from datetime import datetime
-    from pathlib import Path
+def export(ctx, date, output):
+    """Export plan to Markdown."""
     from ..application.use_cases.export_plan import ExportPlanUseCase
-    from ..domain.exceptions import SessionNotFound
 
     container = ctx.obj["container"]
     use_case = ExportPlanUseCase(container)
@@ -184,7 +239,7 @@ def export_shortcut(ctx, date, output):
             await use_case.execute(session_id, output_path)
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint(f"[dim]Hint: Create a plan first with 'uv run plan start'[/dim]")
+            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -196,16 +251,13 @@ def export_shortcut(ctx, date, output):
         pass
 
 
-@cli.command(name="summary")
+@cli.command()
 @click.argument("date", required=False)
 @click.option("--output", type=click.Path(), help="Output file path")
 @click.pass_context
-def summary_shortcut(ctx, date, output):
-    """Export end-of-day summary (shortcut for 'plan summary')."""
-    from datetime import datetime
-    from pathlib import Path
+def summary(ctx, date, output):
+    """Export end-of-day summary."""
     from ..application.use_cases.export_summary import ExportSummaryUseCase
-    from ..domain.exceptions import SessionNotFound
 
     container = ctx.obj["container"]
     use_case = ExportSummaryUseCase(container)
@@ -219,7 +271,7 @@ def summary_shortcut(ctx, date, output):
             await use_case.execute(session_id, output_path)
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint(f"[dim]Hint: Create a plan first with 'uv run plan start'[/dim]")
+            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -234,11 +286,9 @@ def summary_shortcut(ctx, date, output):
 @cli.command(name="export-all")
 @click.argument("date", required=False)
 @click.pass_context
-def export_all_shortcut(ctx, date):
-    """Export both plan and summary (shortcut for 'plan export-all')."""
-    from datetime import datetime
+def export_all(ctx, date):
+    """Export both plan and summary."""
     from ..application.use_cases.export_all import ExportAllUseCase
-    from ..domain.exceptions import SessionNotFound
 
     container = ctx.obj["container"]
     use_case = ExportAllUseCase(container)
@@ -251,7 +301,7 @@ def export_all_shortcut(ctx, date):
             await use_case.execute(session_id)
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint(f"[dim]Hint: Create a plan first with 'uv run plan start'[/dim]")
+            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -261,6 +311,67 @@ def export_all_shortcut(ctx, date):
         asyncio.run(_export())
     except KeyboardInterrupt:
         pass
+
+
+# ===== Session Management =====
+
+
+@cli.command()
+@click.argument("date")
+@click.option("--force", is_flag=True, help="Skip confirmation")
+@click.pass_context
+def delete(ctx, date, force):
+    """Delete a session."""
+    if not force:
+        if not Confirm.ask(f"Delete session for {date}?"):
+            rprint("[yellow]Cancelled[/yellow]")
+            return
+
+    container = ctx.obj["container"]
+    orchestrator = SessionOrchestrator(container)
+
+    async def _delete():
+        success = await orchestrator.delete_session(date)
+        if success:
+            rprint(f"[green]✓ Deleted session {date}[/green]")
+        else:
+            rprint(f"[red]Session {date} not found[/red]")
+
+    asyncio.run(_delete())
+
+
+@cli.command()
+@click.argument("date")
+@click.pass_context
+def info(ctx, date):
+    """Show detailed session information."""
+    container = ctx.obj["container"]
+
+    async def _info():
+        storage = container.storage
+        memory = await storage.load_session(date)
+
+        if not memory:
+            rprint(f"[red]Session {date} not found[/red]")
+            return
+
+        info = {
+            "session_id": memory.metadata.session_id,
+            "state": memory.agent_state.state.value,
+            "created_at": str(memory.metadata.created_at),
+            "last_updated": str(memory.metadata.last_updated),
+            "num_llm_calls": memory.metadata.num_llm_calls,
+            "num_messages": len(memory.conversation.messages),
+        }
+
+        formatter = container.session_formatter
+        panel = formatter.format_session_info(info)
+        console.print(panel)
+
+    asyncio.run(_info())
+
+
+# ===== Profile Management =====
 
 
 @cli.command()
@@ -339,7 +450,7 @@ def show_profile(ctx, user_id):
             profile = await storage.load_profile(user_id)
             if not profile:
                 rprint(f"[yellow]No profile found for '{user_id}'.[/yellow]")
-                rprint("[dim]Run 'uv run plan profile' to create one.[/dim]")
+                rprint("[dim]Run 'day profile' to create one.[/dim]")
                 return
 
             # Display profile in a readable format
@@ -417,14 +528,6 @@ def show_profile(ctx, user_id):
                 raise
 
     asyncio.run(_show())
-
-
-# Import command groups
-from .commands.plan import plan_group
-from .commands.session import session_group
-
-cli.add_command(plan_group)
-cli.add_command(session_group)
 
 
 if __name__ == "__main__":

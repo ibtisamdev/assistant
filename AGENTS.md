@@ -58,16 +58,22 @@ source .venv/bin/activate  # macOS/Linux
 
 ```bash
 # Run with default settings (today's date)
-python main.py
+day start
 
-# Start a new session (ignore existing)
-python main.py --new
-
-# Use specific date
-python main.py --date 2026-01-17
+# Start plan for specific date
+day start 2026-01-23
 
 # List all saved sessions
-python main.py --list
+day list
+
+# View a saved plan
+day show 2026-01-19
+
+# Time tracking
+day checkin
+
+# Get help
+day --help
 ```
 
 ### Testing

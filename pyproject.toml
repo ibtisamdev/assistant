@@ -48,7 +48,7 @@ export = [
 ]
 
 [project.scripts]
-plan = "src.cli.main:cli"
+day = "src.cli.main:cli"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
