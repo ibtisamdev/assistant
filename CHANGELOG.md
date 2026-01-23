@@ -7,7 +7,52 @@ This project is currently in **development mode (v0.1.0-dev)**. All changes are 
 ## [Unreleased] - Development (v0.1.0-dev)
 
 ### Planned Features
-- Priority 6: Testing & CI/CD (v1.0 Release Gate)
+- Priority 6: Testing & CI/CD (v1.0 Release Gate) - Phase 2 complete, Phases 3-6 remaining
+
+### 2026-01-23: CI/CD Pipeline (Priority 6 - Part 1)
+
+Automated testing and release workflows using GitHub Actions.
+
+### Added
+
+**GitHub Actions Workflows:**
+- `.github/workflows/test.yml` - Runs on every push to `main` and all PRs:
+  - Python 3.12 environment setup using `uv`
+  - Ruff lint checks
+  - Mypy type checking
+  - Pytest with coverage reporting
+  - Dummy API key for CLI smoke tests
+- `.github/workflows/release.yml` - Publishes to PyPI on GitHub release:
+  - Builds wheel and sdist using `uv build`
+  - Uses PyPI trusted publishing (no API token needed)
+  - Triggered by `release: [published]` event
+
+**README Updates:**
+- Added CI status badge linking to test workflow
+
+**Documentation:**
+- Added "Pre-Release Setup (One-Time)" section to `RELEASE_CHECKLIST_V1.md`
+- Instructions for configuring PyPI trusted publishing
+- Updated Phase 2 status to complete (~30% total progress)
+
+### Technical Details
+
+**New Files:**
+- `.github/workflows/test.yml` (39 lines)
+- `.github/workflows/release.yml` (44 lines)
+
+**Modified Files:**
+- `README.md` - Added CI badge
+- `docs/RELEASE_CHECKLIST_V1.md` - Phase 2 marked complete, added setup instructions
+
+### Quality Gates
+
+All quality gates passing locally:
+- **381 tests passed** (89% coverage)
+- **ruff check:** All checks passed
+- **mypy:** Success: no issues in 97 source files
+
+---
 
 ### 2026-01-22: Workflow Integration (Priority 5)
 
