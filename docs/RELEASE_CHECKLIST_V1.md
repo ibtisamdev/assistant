@@ -72,27 +72,29 @@ This document tracks everything needed to release v1.0.0 to production.
 
 ---
 
-## Phase 2: CI/CD Pipeline
+## Phase 2: CI/CD Pipeline ✅ COMPLETE
 
 **Goal:** Automated testing and release process.
 
+**Status:** Completed 2026-01-23
+
 ### GitHub Actions Workflows
-- [ ] `.github/workflows/test.yml` - Run tests on every PR/push
-  - Python 3.12 matrix
+- [x] `.github/workflows/test.yml` - Run tests on every PR/push
+  - Python 3.12
   - Run pytest with coverage
   - Run ruff lint
   - Run mypy type check
-  - Upload coverage to Codecov (optional)
-- [ ] `.github/workflows/release.yml` - Publish to PyPI on release
+  - Codecov deferred (not needed for v1.0)
+- [x] `.github/workflows/release.yml` - Publish to PyPI on release
   - Triggered by GitHub release creation
-  - Build wheel and sdist
+  - Build wheel and sdist using uv
   - Publish to PyPI using trusted publishing
 
 ### Badges for README
-- [ ] CI status badge
-- [ ] Coverage badge (Codecov or shields.io)
-- [ ] PyPI version badge
-- [ ] Python version badge
+- [x] CI status badge
+- [ ] Coverage badge (deferred - no Codecov)
+- [ ] PyPI version badge (deferred to Phase 3 - after package name decided)
+- [x] Python version badge (already existed)
 
 ---
 
@@ -185,6 +187,37 @@ This document tracks everything needed to release v1.0.0 to production.
 
 ---
 
+## Pre-Release Setup (One-Time)
+
+Before the first release, these manual setup steps must be completed:
+
+### PyPI Trusted Publishing
+
+Configure PyPI to accept releases from GitHub Actions (no API token needed):
+
+1. Go to https://pypi.org/manage/account/publishing/
+2. Click "Add a new pending publisher"
+3. Fill in:
+   - **PyPI Project Name:** `<package-name>` (after decided in Phase 3)
+   - **Owner:** `ibtisamdev`
+   - **Repository:** `assistant`
+   - **Workflow name:** `release.yml`
+   - **Environment name:** (leave blank)
+4. Click "Add"
+
+**Note:** This must be done before creating the first GitHub release, otherwise the publish step will fail.
+
+### GitHub Repository Settings (Optional)
+
+For additional security:
+
+1. Go to repository Settings → Environments
+2. Create environment named `pypi`
+3. Add required reviewers (optional - for manual approval before publish)
+4. Add deployment branch rule: `main` only
+
+---
+
 ## Phase 6: Release
 
 **Goal:** Ship v1.0.0!
@@ -220,12 +253,12 @@ This document tracks everything needed to release v1.0.0 to production.
 | Phase | Effort | Estimate | Status |
 |-------|--------|----------|--------|
 | Phase 1: Testing & Quality | High | 3-5 days | ✅ Complete |
-| Phase 2: CI/CD Pipeline | Low | 1 day | ⏳ Next |
-| Phase 3: Distribution Prep | Medium | 2-3 days | Pending |
+| Phase 2: CI/CD Pipeline | Low | 1 day | ✅ Complete |
+| Phase 3: Distribution Prep | Medium | 2-3 days | ⏳ Next |
 | Phase 4: Documentation | Low | 0.5 day | Pending |
 | Phase 5: Pre-Release Validation | Low | 0.5 day | Pending |
 | Phase 6: Release | Low | 0.5 day | Pending |
-| **Total** | | **7-10 days** | ~15% done |
+| **Total** | | **7-10 days** | ~30% done |
 
 ---
 

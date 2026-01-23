@@ -1,5 +1,6 @@
 # Personal Assistant
 
+[![CI](https://github.com/ibtisamdev/assistant/actions/workflows/test.yml/badge.svg)](https://github.com/ibtisamdev/assistant/actions/workflows/test.yml)
 [![Version](https://img.shields.io/badge/version-0.1.0--dev-orange)](CHANGELOG.md)
 [![Python](https://img.shields.io/badge/python-3.12+-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
