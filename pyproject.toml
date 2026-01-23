@@ -171,4 +171,6 @@ dev = [
     "types-pyyaml>=6.0.0",
     "types-aiofiles>=24.1.0",
     "pre-commit>=4.0.0",
+    "twine>=6.2.0",
+    "build>=1.4.0",
 ]
