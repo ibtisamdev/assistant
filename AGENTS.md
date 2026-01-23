@@ -53,6 +53,9 @@ pip install -e .
 # Activate virtual environment
 source .venv/bin/activate  # macOS/Linux
 .venv\Scripts\activate      # Windows
+
+# Install pre-commit hooks (one-time setup)
+uv run pre-commit install
 ```
 
 ### Running the Application

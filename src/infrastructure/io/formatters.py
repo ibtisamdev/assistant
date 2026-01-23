@@ -1,6 +1,5 @@
 """Rich-formatted output."""
 
-
 from rich import box
 from rich.console import Console
 from rich.panel import Panel

@@ -170,4 +170,5 @@ dev = [
     "mypy>=1.14.0",
     "types-pyyaml>=6.0.0",
     "types-aiofiles>=24.1.0",
+    "pre-commit>=4.0.0",
 ]

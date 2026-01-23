@@ -1,6 +1,5 @@
 """Integration tests for the full planning workflow."""
 
-
 import pytest
 
 from src.domain.models.session import Session

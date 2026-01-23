@@ -69,9 +69,7 @@ class WellnessSchedule(BaseModel):
     """Health and wellness timing preferences."""
 
     wake_time: str | None = Field(default=None, description="Typical wake time in HH:MM format")
-    sleep_time: str | None = Field(
-        default=None, description="Typical sleep time in HH:MM format"
-    )
+    sleep_time: str | None = Field(default=None, description="Typical sleep time in HH:MM format")
     meal_times: list[dict] = Field(
         default_factory=list,
         description="Regular meal times: [{'name': 'lunch', 'time': '12:00', 'duration': 30}]",

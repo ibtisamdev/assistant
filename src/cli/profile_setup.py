@@ -1,6 +1,5 @@
 """Interactive profile setup wizard."""
 
-
 from src.domain.models.profile import (
     RecurringTask,
     UserProfile,
@@ -434,9 +433,7 @@ class ProfileSetupWizard:
                 return result.lower()
             print(f"Invalid choice. Please choose from: {choices_str}")
 
-    def _prompt_list(
-        self, question: str, default: list[str] | None = None
-    ) -> list[str] | None:
+    def _prompt_list(self, question: str, default: list[str] | None = None) -> list[str] | None:
         """Prompt user for comma-separated list."""
         default_str = ", ".join(default) if default else None
         result = self._prompt(question, default_str)

@@ -1,6 +1,5 @@
 """State machine service - manages state transitions."""
 
-
 from ..exceptions import InvalidStateTransition
 from ..models.state import VALID_STATE_TRANSITIONS, State
 

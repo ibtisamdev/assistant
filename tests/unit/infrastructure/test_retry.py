@@ -1,6 +1,5 @@
 """Tests for RetryStrategy - exponential backoff retry logic."""
 
-
 import pytest
 
 from src.application.config import RetryConfig

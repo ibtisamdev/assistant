@@ -1,6 +1,5 @@
 """CLI smoke tests using Click's CliRunner."""
 
-
 import pytest
 from click.testing import CliRunner
 

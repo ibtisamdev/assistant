@@ -1,6 +1,5 @@
 """Tests for AgentService - core agent business logic."""
 
-
 import pytest
 
 from src.domain.models.profile import (

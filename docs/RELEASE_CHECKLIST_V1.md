@@ -27,7 +27,7 @@ This document tracks everything needed to release v1.0.0 to production.
 - [x] Create `tests/conftest.py` with shared fixtures (MockLLMProvider, MockStorage, factories)
 - [x] Configure coverage omit for presentation-layer code (CLI, formatters, interactive use cases)
 - [x] Configure ruff and mypy in `pyproject.toml`
-- [ ] Add pre-commit hook for fast tests (optional - deferred)
+- [x] Add pre-commit hooks (ruff lint + format with auto-fix)
 
 ### Unit Tests - Completed (381 tests total)
 

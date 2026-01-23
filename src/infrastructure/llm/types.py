@@ -1,6 +1,5 @@
 """LLM-specific types."""
 
-
 from pydantic import BaseModel
 
 

@@ -111,9 +111,7 @@ class SummaryExporter:
             "has_tracking": has_tracking,
         }
 
-    def to_string(
-        self, plan: Plan, date_str: str | None = None, notes: str | None = None
-    ) -> str:
+    def to_string(self, plan: Plan, date_str: str | None = None, notes: str | None = None) -> str:
         """
         Convert plan to summary Markdown string with time analysis.
 

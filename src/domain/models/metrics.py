@@ -1,6 +1,5 @@
 """Productivity metrics models."""
 
-
 from pydantic import BaseModel, Field
 
 

@@ -1,6 +1,5 @@
 """Tests for JSONStorage - async JSON file storage."""
 
-
 import pytest
 
 from src.application.config import StorageConfig

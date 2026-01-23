@@ -27,9 +27,7 @@ class DayTemplate(BaseModel):
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)
-    last_used: datetime | None = Field(
-        default=None, description="When template was last applied"
-    )
+    last_used: datetime | None = Field(default=None, description="When template was last applied")
     use_count: int = Field(default=0, description="Number of times template has been used")
 
     def prepare_for_new_day(self) -> "DayTemplate":
