@@ -1,17 +1,17 @@
 """Domain models."""
 
-from .state import State, Feedback, VALID_STATE_TRANSITIONS
-from .planning import Plan, ScheduleItem, Question, TaskStatus, TaskCategory
-from .conversation import Message, MessageRole, ConversationHistory
-from .profile import UserProfile, WorkHours, EnergyPattern, RecurringTask
-from .session import Memory, AgentState, SessionMetadata, Session
+from .conversation import ConversationHistory, Message, MessageRole
 from .metrics import (
-    TaskMetric,
-    EstimationAccuracy,
-    DailyMetrics,
-    ProductivityPattern,
     AggregateMetrics,
+    DailyMetrics,
+    EstimationAccuracy,
+    ProductivityPattern,
+    TaskMetric,
 )
+from .planning import Plan, Question, ScheduleItem, TaskCategory, TaskStatus
+from .profile import EnergyPattern, RecurringTask, UserProfile, WorkHours
+from .session import AgentState, Memory, Session, SessionMetadata
+from .state import VALID_STATE_TRANSITIONS, Feedback, State
 from .template import DayTemplate, TemplateMetadata
 
 __all__ = [

@@ -1,9 +1,11 @@
 """Tests for TimeTrackingService."""
 
-import pytest
 from datetime import datetime, timedelta
-from src.domain.services.time_tracking_service import TimeTrackingService
+
+import pytest
+
 from src.domain.models.planning import Plan, ScheduleItem, TaskStatus
+from src.domain.services.time_tracking_service import TimeTrackingService
 
 
 @pytest.fixture
@@ -237,7 +239,7 @@ class TestCurrentTask:
     def test_get_current_task_found(self, service, sample_plan):
         """Test finding current task based on time."""
         # Mock current time to be 9:30 AM
-        now = datetime.now().replace(hour=9, minute=30)
+        datetime.now().replace(hour=9, minute=30)
 
         # This test is time-dependent, so we'll skip actual time checking
         # In a real scenario, you'd mock datetime.now()

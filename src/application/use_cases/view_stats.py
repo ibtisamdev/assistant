@@ -1,13 +1,14 @@
 """View daily productivity statistics use case."""
 
 import logging
+
 from rich.console import Console
 
-from ..container import Container
 from ...domain.exceptions import SessionNotFound
-from ...domain.services.metrics_service import MetricsService
 from ...domain.models.metrics import DailyMetrics
+from ...domain.services.metrics_service import MetricsService
 from ...infrastructure.io.formatters import MetricsFormatter
+from ..container import Container
 
 logger = logging.getLogger(__name__)
 

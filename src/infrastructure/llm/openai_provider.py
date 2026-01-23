@@ -1,11 +1,13 @@
 """Async OpenAI implementation."""
 
 import logging
-from typing import Type, TypeVar, List
+from typing import TypeVar
+
 from openai import AsyncOpenAI
-from ...domain.models.conversation import Message
-from ...domain.exceptions import LLMError
+
 from ...application.config import LLMConfig
+from ...domain.exceptions import LLMError
+from ...domain.models.conversation import Message
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -43,7 +45,7 @@ class OpenAIProvider:
 
         logger.info(f"OpenAI provider initialized with model: {config.model}")
 
-    async def generate(self, messages: List[Message]) -> str:
+    async def generate(self, messages: list[Message]) -> str:
         """Generate unstructured response."""
         try:
             response = await self.client.chat.completions.create(
@@ -62,7 +64,7 @@ class OpenAIProvider:
             logger.error(f"OpenAI generation failed: {e}")
             raise LLMError(f"Failed to generate response: {e}") from e
 
-    async def generate_structured(self, messages: List[Message], schema: Type[T]) -> T:
+    async def generate_structured(self, messages: list[Message], schema: type[T]) -> T:
         """Generate structured response using OpenAI's responses.parse."""
         try:
             # Convert messages to OpenAI format
@@ -94,7 +96,7 @@ class OpenAIProvider:
             logger.error(f"OpenAI structured generation failed: {e}")
             raise LLMError(f"Failed to generate structured response: {e}") from e
 
-    async def stream_generate(self, messages: List[Message]):
+    async def stream_generate(self, messages: list[Message]):
         """Stream response (for future real-time feedback)."""
         try:
             stream = await self.client.chat.completions.create(

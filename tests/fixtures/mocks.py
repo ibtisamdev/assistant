@@ -1,10 +1,12 @@
 """Mock implementations for testing."""
 
-from typing import Type, TypeVar, List, Optional, Dict
+from typing import TypeVar
+
 from src.domain.models.conversation import Message
-from src.domain.models.session import Memory, Session
 from src.domain.models.profile import UserProfile
+from src.domain.models.session import Memory, Session
 from src.domain.models.state import State
+
 from .factories import PlanFactory
 
 T = TypeVar("T")
@@ -13,17 +15,17 @@ T = TypeVar("T")
 class MockLLMProvider:
     """Mock LLM for testing."""
 
-    def __init__(self, responses: Optional[Dict] = None):
+    def __init__(self, responses: dict | None = None):
         self.responses = responses or {}
         self.call_count = 0
         self.last_messages = []
 
-    async def generate(self, messages: List[Message]) -> str:
+    async def generate(self, messages: list[Message]) -> str:
         self.call_count += 1
         self.last_messages = messages
         return self.responses.get("default", "Mock response")
 
-    async def generate_structured(self, messages: List[Message], schema: Type[T]) -> T:
+    async def generate_structured(self, messages: list[Message], schema: type[T]) -> T:
         self.call_count += 1
         self.last_messages = messages
 
@@ -44,7 +46,7 @@ class MockLLMProvider:
         # Default: return empty instance
         return schema()
 
-    async def stream_generate(self, messages: List[Message]):
+    async def stream_generate(self, messages: list[Message]):
         for chunk in ["Mock ", "streaming ", "response"]:
             yield chunk
 
@@ -53,8 +55,8 @@ class MockStorage:
     """In-memory storage for testing."""
 
     def __init__(self):
-        self.sessions: Dict[str, Memory] = {}
-        self.profiles: Dict[str, UserProfile] = {}
+        self.sessions: dict[str, Memory] = {}
+        self.profiles: dict[str, UserProfile] = {}
         self.save_count = 0
         self.load_count = 0
 
@@ -62,11 +64,11 @@ class MockStorage:
         self.save_count += 1
         self.sessions[session_id] = memory
 
-    async def load_session(self, session_id: str) -> Optional[Memory]:
+    async def load_session(self, session_id: str) -> Memory | None:
         self.load_count += 1
         return self.sessions.get(session_id)
 
-    async def list_sessions(self) -> List[dict]:
+    async def list_sessions(self) -> list[dict]:
         return [
             {
                 "session_id": sid,
@@ -87,14 +89,14 @@ class MockStorage:
     async def save_profile(self, user_id: str, profile: UserProfile) -> None:
         self.profiles[user_id] = profile
 
-    async def load_profile(self, user_id: str) -> Optional[UserProfile]:
+    async def load_profile(self, user_id: str) -> UserProfile | None:
         return self.profiles.get(user_id)
 
 
 class MockInputHandler:
     """Mock input handler for testing."""
 
-    def __init__(self, responses: Optional[List[str]] = None):
+    def __init__(self, responses: list[str] | None = None):
         self.responses = responses or []
         self.response_index = 0
         self.prompts_received = []
@@ -102,7 +104,7 @@ class MockInputHandler:
     async def get_goal(self) -> str:
         return await self._get_next_response()
 
-    async def get_feedback(self) -> Optional[str]:
+    async def get_feedback(self) -> str | None:
         response = await self._get_next_response()
         if response.lower() in ["no", "done"]:
             return None

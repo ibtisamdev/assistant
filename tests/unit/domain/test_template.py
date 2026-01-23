@@ -1,9 +1,11 @@
 """Tests for DayTemplate model."""
 
-import pytest
 from datetime import datetime
+
+import pytest
+
+from src.domain.models.planning import ScheduleItem, TaskCategory, TaskStatus
 from src.domain.models.template import DayTemplate, TemplateMetadata
-from src.domain.models.planning import ScheduleItem, TaskStatus, TaskCategory
 
 
 @pytest.fixture

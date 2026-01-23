@@ -1,9 +1,9 @@
 """Conversation and messaging models."""
 
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+
 from pydantic import BaseModel, Field
-from typing import List
 
 
 class MessageRole(str, Enum):
@@ -25,7 +25,7 @@ class Message(BaseModel):
 class ConversationHistory(BaseModel):
     """Manages conversation context for LLM."""
 
-    messages: List[Message] = Field(default_factory=list)
+    messages: list[Message] = Field(default_factory=list)
 
     def add_system(self, content: str) -> None:
         """Add system message (prompts)."""
@@ -39,11 +39,11 @@ class ConversationHistory(BaseModel):
         """Add assistant message (concise summary, not full Session)."""
         self.messages.append(Message(role=MessageRole.assistant, content=content))
 
-    def to_openai_format(self) -> List[dict]:
+    def to_openai_format(self) -> list[dict]:
         """Convert to OpenAI API format."""
         return [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
 
-    def get_recent(self, n: int = 10) -> List[Message]:
+    def get_recent(self, n: int = 10) -> list[Message]:
         """Get last N messages."""
         return self.messages[-n:]
 

@@ -1,10 +1,11 @@
 """Test data factories."""
 
 from datetime import datetime
-from src.domain.models.planning import Plan, ScheduleItem, Question
-from src.domain.models.session import Memory, AgentState, SessionMetadata
+
 from src.domain.models.conversation import ConversationHistory
-from src.domain.models.profile import UserProfile, WorkHours, EnergyPattern
+from src.domain.models.planning import Plan, Question, ScheduleItem
+from src.domain.models.profile import EnergyPattern, UserProfile, WorkHours
+from src.domain.models.session import AgentState, Memory, SessionMetadata
 from src.domain.models.state import State
 
 

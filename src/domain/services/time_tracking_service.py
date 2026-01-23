@@ -2,9 +2,8 @@
 
 import logging
 from datetime import datetime
-from typing import Optional, Dict, List, Tuple
+
 from ..models.planning import Plan, ScheduleItem, TaskStatus, TimeEdit
-from ..exceptions import InvalidPlan
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ class TimeTrackingService:
         logger.info(f"Completed task: {item.task} (took {item.actual_minutes} minutes)")
         return item
 
-    def skip_task(self, item: ScheduleItem, reason: Optional[str] = None) -> ScheduleItem:
+    def skip_task(self, item: ScheduleItem, reason: str | None = None) -> ScheduleItem:
         """
         Mark task as skipped.
 
@@ -87,7 +86,7 @@ class TimeTrackingService:
         item: ScheduleItem,
         field: str,
         new_value: datetime,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> ScheduleItem:
         """
         Manually edit a timestamp with audit trail.
@@ -123,7 +122,7 @@ class TimeTrackingService:
         )
         return item
 
-    def calculate_variance(self, item: ScheduleItem) -> Optional[int]:
+    def calculate_variance(self, item: ScheduleItem) -> int | None:
         """
         Calculate time variance for a task.
 
@@ -132,7 +131,7 @@ class TimeTrackingService:
         """
         return item.time_variance
 
-    def get_completion_stats(self, plan: Plan) -> Dict[str, any]:
+    def get_completion_stats(self, plan: Plan) -> dict[str, int | float]:
         """
         Calculate completion statistics for a plan.
 
@@ -185,7 +184,7 @@ class TimeTrackingService:
             "average_variance": round(average_variance, 1),
         }
 
-    def get_current_task(self, plan: Plan) -> Optional[ScheduleItem]:
+    def get_current_task(self, plan: Plan) -> ScheduleItem | None:
         """
         Find the task that should be happening now based on current time.
 
@@ -215,7 +214,7 @@ class TimeTrackingService:
 
         return None
 
-    def get_next_task(self, plan: Plan) -> Optional[ScheduleItem]:
+    def get_next_task(self, plan: Plan) -> ScheduleItem | None:
         """
         Find the next pending task (not started or in progress).
 
@@ -234,7 +233,7 @@ class TimeTrackingService:
 
         return None
 
-    def find_task_by_name(self, plan: Plan, task_name: str) -> Optional[ScheduleItem]:
+    def find_task_by_name(self, plan: Plan, task_name: str) -> ScheduleItem | None:
         """
         Find a task by name (case-insensitive partial match).
 
@@ -259,7 +258,7 @@ class TimeTrackingService:
 
         return None
 
-    def validate_tracking_consistency(self, item: ScheduleItem) -> List[str]:
+    def validate_tracking_consistency(self, item: ScheduleItem) -> list[str]:
         """
         Validate tracking data consistency.
 

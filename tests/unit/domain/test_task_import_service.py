@@ -1,12 +1,14 @@
 """Tests for TaskImportService."""
 
-import pytest
 from datetime import datetime, timedelta
-from src.domain.services.task_import_service import TaskImportService
-from src.domain.models.planning import Plan, ScheduleItem, TaskStatus, TaskCategory
-from src.domain.models.session import Memory, AgentState, SessionMetadata
+
+import pytest
+
 from src.domain.models.conversation import ConversationHistory
+from src.domain.models.planning import Plan, ScheduleItem, TaskCategory, TaskStatus
+from src.domain.models.session import AgentState, Memory, SessionMetadata
 from src.domain.models.state import State
+from src.domain.services.task_import_service import TaskImportService
 
 
 @pytest.fixture

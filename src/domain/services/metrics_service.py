@@ -3,16 +3,15 @@
 import logging
 from datetime import datetime, timedelta
 from statistics import median
-from typing import Dict, List, Optional
 
-from ..models.planning import Plan, ScheduleItem, TaskStatus, TaskCategory
 from ..models.metrics import (
-    DailyMetrics,
-    TaskMetric,
-    EstimationAccuracy,
     AggregateMetrics,
+    DailyMetrics,
+    EstimationAccuracy,
     ProductivityPattern,
+    TaskMetric,
 )
+from ..models.planning import Plan, TaskCategory, TaskStatus
 from ..models.session import Memory
 
 logger = logging.getLogger(__name__)
@@ -79,7 +78,7 @@ class MetricsService:
             top_time_consumers=top_consumers,
         )
 
-    def calculate_time_by_category(self, plan: Plan) -> Dict[str, int]:
+    def calculate_time_by_category(self, plan: Plan) -> dict[str, int]:
         """
         Calculate total time spent per category.
 
@@ -91,7 +90,7 @@ class MetricsService:
         Returns:
             Dictionary mapping category name to total minutes
         """
-        time_by_category: Dict[str, int] = {}
+        time_by_category: dict[str, int] = {}
 
         for item in plan.schedule:
             category = item.category.value
@@ -104,7 +103,7 @@ class MetricsService:
 
         return time_by_category
 
-    def calculate_estimation_accuracy(self, plan: Plan) -> Optional[EstimationAccuracy]:
+    def calculate_estimation_accuracy(self, plan: Plan) -> EstimationAccuracy | None:
         """
         Analyze estimation accuracy for completed tasks.
 
@@ -173,7 +172,7 @@ class MetricsService:
             most_overestimated=most_over,
         )
 
-    def get_time_consuming_tasks(self, plan: Plan, top_n: int = 5) -> List[TaskMetric]:
+    def get_time_consuming_tasks(self, plan: Plan, top_n: int = 5) -> list[TaskMetric]:
         """
         Get the most time-consuming tasks.
 
@@ -188,7 +187,7 @@ class MetricsService:
 
         for item in plan.schedule:
             # Use actual time if available, otherwise estimated
-            time_spent = item.actual_minutes or item.estimated_minutes or item.extract_duration()
+            item.actual_minutes or item.estimated_minutes or item.extract_duration()
 
             task_metrics.append(
                 TaskMetric(
@@ -208,7 +207,7 @@ class MetricsService:
 
     def calculate_aggregate_metrics(
         self,
-        sessions: List[Memory],
+        sessions: list[Memory],
         period_start: str,
         period_end: str,
         period_type: str = "custom",
@@ -255,16 +254,18 @@ class MetricsService:
         # Aggregate metrics
         total_planned = 0
         total_actual = 0
-        total_by_category: Dict[str, int] = {}
-        completion_rates: List[float] = []
-        completion_rate_by_day: Dict[str, float] = {}
+        total_by_category: dict[str, int] = {}
+        completion_rates: list[float] = []
+        completion_rate_by_day: dict[str, float] = {}
         total_tasks = 0
         total_completed = 0
-        all_variances: List[float] = []
-        tasks_within_15: List[bool] = []
+        all_variances: list[float] = []
+        tasks_within_15: list[float] = []
 
         for session in valid_sessions:
             plan = session.agent_state.plan
+            if plan is None:
+                continue
             date = session.metadata.session_id
 
             # Daily metrics
@@ -309,12 +310,12 @@ class MetricsService:
 
         # Best and worst days
         best_day = (
-            max(completion_rate_by_day, key=completion_rate_by_day.get)
+            max(completion_rate_by_day.keys(), key=lambda k: completion_rate_by_day[k])
             if completion_rate_by_day
             else None
         )
         worst_day = (
-            min(completion_rate_by_day, key=completion_rate_by_day.get)
+            min(completion_rate_by_day.keys(), key=lambda k: completion_rate_by_day[k])
             if completion_rate_by_day
             else None
         )
@@ -351,7 +352,7 @@ class MetricsService:
         )
 
     def calculate_weekly_metrics(
-        self, sessions: List[Memory], week_start: Optional[str] = None
+        self, sessions: list[Memory], week_start: str | None = None
     ) -> AggregateMetrics:
         """
         Calculate metrics for a week (Monday-Sunday).
@@ -380,7 +381,7 @@ class MetricsService:
         )
 
     def calculate_monthly_metrics(
-        self, sessions: List[Memory], year: Optional[int] = None, month: Optional[int] = None
+        self, sessions: list[Memory], year: int | None = None, month: int | None = None
     ) -> AggregateMetrics:
         """
         Calculate metrics for a month.
@@ -413,7 +414,7 @@ class MetricsService:
             period_type="month",
         )
 
-    def identify_patterns(self, sessions: List[Memory]) -> List[ProductivityPattern]:
+    def identify_patterns(self, sessions: list[Memory]) -> list[ProductivityPattern]:
         """
         Analyze sessions to identify productivity patterns.
 
@@ -423,7 +424,7 @@ class MetricsService:
         Returns:
             List of identified patterns
         """
-        patterns = []
+        patterns: list[ProductivityPattern] = []
 
         if len(sessions) < 3:
             # Need at least 3 days to identify patterns
@@ -446,10 +447,10 @@ class MetricsService:
 
         return patterns
 
-    def _find_time_sink_patterns(self, sessions: List[Memory]) -> Optional[ProductivityPattern]:
+    def _find_time_sink_patterns(self, sessions: list[Memory]) -> ProductivityPattern | None:
         """Find tasks that consistently take longer than estimated."""
         # Track variance by task keywords
-        task_variances: Dict[str, List[int]] = {}
+        task_variances: dict[str, list[int]] = {}
 
         for session in sessions:
             plan = session.agent_state.plan
@@ -485,7 +486,7 @@ class MetricsService:
 
         return None
 
-    def _find_completion_trends(self, sessions: List[Memory]) -> Optional[ProductivityPattern]:
+    def _find_completion_trends(self, sessions: list[Memory]) -> ProductivityPattern | None:
         """Find trends in completion rates."""
         completion_rates = []
 
@@ -523,9 +524,9 @@ class MetricsService:
 
         return None
 
-    def _find_category_patterns(self, sessions: List[Memory]) -> Optional[ProductivityPattern]:
+    def _find_category_patterns(self, sessions: list[Memory]) -> ProductivityPattern | None:
         """Find patterns in category distribution."""
-        category_counts: Dict[str, int] = {}
+        category_counts: dict[str, int] = {}
 
         for session in sessions:
             plan = session.agent_state.plan

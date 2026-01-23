@@ -3,10 +3,11 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
+
 import aiofiles
 
-from ...domain.models.planning import Plan, ScheduleItem, TaskStatus
+from ...domain.models.planning import Plan, TaskStatus
 from ...domain.models.session import Memory
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class SummaryExporter:
         except ValueError:
             return date_str
 
-    def _format_duration(self, minutes: Optional[int]) -> str:
+    def _format_duration(self, minutes: int | None) -> str:
         """Format minutes as human-readable duration."""
         if minutes is None:
             return "N/A"
@@ -36,7 +37,7 @@ class SummaryExporter:
         else:
             return f"{mins}m"
 
-    def _format_variance(self, variance: Optional[int]) -> str:
+    def _format_variance(self, variance: int | None) -> str:
         """Format time variance with indicator."""
         if variance is None:
             return "N/A"
@@ -47,7 +48,7 @@ class SummaryExporter:
         else:
             return "0m"
 
-    def _variance_indicator(self, variance: Optional[int]) -> str:
+    def _variance_indicator(self, variance: int | None) -> str:
         """Get emoji indicator for variance."""
         if variance is None:
             return ""
@@ -69,7 +70,7 @@ class SummaryExporter:
         else:
             return ""
 
-    def _calculate_stats(self, plan: Plan) -> Dict[str, Any]:
+    def _calculate_stats(self, plan: Plan) -> dict[str, Any]:
         """Calculate summary statistics for the plan."""
         total_tasks = len(plan.schedule)
         completed = sum(1 for item in plan.schedule if item.status == TaskStatus.completed)
@@ -111,7 +112,7 @@ class SummaryExporter:
         }
 
     def to_string(
-        self, plan: Plan, date_str: Optional[str] = None, notes: Optional[str] = None
+        self, plan: Plan, date_str: str | None = None, notes: str | None = None
     ) -> str:
         """
         Convert plan to summary Markdown string with time analysis.

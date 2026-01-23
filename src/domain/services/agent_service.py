@@ -1,16 +1,16 @@
 """Agent service - core agent business logic."""
 
 import logging
-from typing import Dict
-from ..models.session import Memory, AgentState, Session
-from ..models.state import State
-from ..models.planning import Question, Plan
-from ..models.profile import UserProfile
-from ..models.conversation import Message, MessageRole
-from ..protocols.llm import LLMProvider
-from .state_machine import StateMachine
-from .planning_service import PlanningService
+
 from ..exceptions import InvalidStateTransition
+from ..models.conversation import Message, MessageRole
+from ..models.planning import Question
+from ..models.profile import UserProfile
+from ..models.session import AgentState, Memory, Session
+from ..models.state import State
+from ..protocols.llm import LLMProvider
+from .planning_service import PlanningService
+from .state_machine import StateMachine
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class AgentService:
 
         return new_state
 
-    async def process_answers(self, answers: Dict[str, str], memory: Memory) -> AgentState:
+    async def process_answers(self, answers: dict[str, str], memory: Memory) -> AgentState:
         """
         Process clarifying question answers.
 

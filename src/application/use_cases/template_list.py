@@ -1,7 +1,7 @@
 """List templates use case."""
 
 import logging
-from typing import List
+
 from rich.console import Console
 from rich.table import Table
 
@@ -19,7 +19,7 @@ class ListTemplatesUseCase:
         self.storage = container.storage
         self.console = Console()
 
-    async def execute(self) -> List[TemplateMetadata]:
+    async def execute(self) -> list[TemplateMetadata]:
         """
         List all saved templates.
 

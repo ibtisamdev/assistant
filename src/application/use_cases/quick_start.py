@@ -1,19 +1,18 @@
 """Quick start use case - fast plan creation based on previous patterns."""
 
 import logging
-from datetime import datetime, timedelta
-from typing import Optional, List
+from datetime import datetime
+
 from rich.console import Console
-from rich import print as rprint
 
 from ...domain.models import (
-    State,
-    Memory,
     AgentState,
-    SessionMetadata,
     ConversationHistory,
+    Memory,
     Plan,
     ScheduleItem,
+    SessionMetadata,
+    State,
 )
 from ...domain.models.profile import UserProfile
 from ...domain.services.task_import_service import TaskImportService
@@ -47,9 +46,9 @@ class QuickStartUseCase:
 
     async def execute(
         self,
-        session_id: Optional[str] = None,
-        from_template: Optional[str] = None,
-    ) -> Optional[Memory]:
+        session_id: str | None = None,
+        from_template: str | None = None,
+    ) -> Memory | None:
         """
         Execute quick start workflow.
 
@@ -112,7 +111,7 @@ class QuickStartUseCase:
         return memory
 
     async def _check_viability(
-        self, session_id: str, profile: UserProfile, template_name: Optional[str]
+        self, session_id: str, profile: UserProfile, template_name: str | None
     ) -> dict:
         """
         Check if quick start is viable.
@@ -226,7 +225,7 @@ class QuickStartUseCase:
         session_id: str,
         profile: UserProfile,
         source_plan: Plan,
-        incomplete_tasks: List[ScheduleItem],
+        incomplete_tasks: list[ScheduleItem],
         source_date: str,
     ) -> Memory:
         """Generate a quick plan based on source plan and incomplete tasks."""

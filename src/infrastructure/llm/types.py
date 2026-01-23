@@ -1,6 +1,6 @@
 """LLM-specific types."""
 
-from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -9,5 +9,5 @@ class LLMResponse(BaseModel):
 
     content: str
     model: str
-    tokens_used: Optional[int] = None
-    finish_reason: Optional[str] = None
+    tokens_used: int | None = None
+    finish_reason: str | None = None

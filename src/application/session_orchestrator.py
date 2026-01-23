@@ -2,12 +2,12 @@
 
 import logging
 from datetime import datetime
-from typing import Optional
+
+from ..domain.models.session import Memory
 from .container import Container
 from .use_cases.create_plan import CreatePlanUseCase
 from .use_cases.resume_session import ResumeSessionUseCase
 from .use_cases.revise_plan import RevisePlanUseCase
-from ..domain.models.session import Memory
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class SessionOrchestrator:
         self.revise_plan_uc = RevisePlanUseCase(container)
         self.storage = container.storage
 
-    async def run_new_session(self, date: Optional[str] = None, force_new: bool = False) -> Memory:
+    async def run_new_session(self, date: str | None = None, force_new: bool = False) -> Memory:
         """
         Start new planning session.
 
@@ -45,7 +45,7 @@ class SessionOrchestrator:
         logger.info(f"Resuming session: {date}")
         return await self.resume_session_uc.execute(date)
 
-    async def run_revise(self, date: Optional[str] = None) -> Memory:
+    async def run_revise(self, date: str | None = None) -> Memory:
         """
         Revise finalized plan.
 

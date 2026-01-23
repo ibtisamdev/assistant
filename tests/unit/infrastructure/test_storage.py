@@ -1,6 +1,7 @@
 """Tests for storage."""
 
 import pytest
+
 from tests.fixtures.factories import MemoryFactory
 from tests.fixtures.mocks import MockStorage
 

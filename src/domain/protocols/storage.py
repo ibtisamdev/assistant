@@ -1,8 +1,9 @@
 """Storage provider protocol."""
 
-from typing import Protocol, Optional, List
-from ..models.session import Memory
+from typing import Protocol
+
 from ..models.profile import UserProfile
+from ..models.session import Memory
 
 
 class StorageProvider(Protocol):
@@ -12,11 +13,11 @@ class StorageProvider(Protocol):
         """Save session data."""
         ...
 
-    async def load_session(self, session_id: str) -> Optional[Memory]:
+    async def load_session(self, session_id: str) -> Memory | None:
         """Load session data."""
         ...
 
-    async def list_sessions(self) -> List[dict]:
+    async def list_sessions(self) -> list[dict]:
         """List all sessions with metadata."""
         ...
 
@@ -28,6 +29,6 @@ class StorageProvider(Protocol):
         """Save user profile."""
         ...
 
-    async def load_profile(self, user_id: str) -> Optional[UserProfile]:
+    async def load_profile(self, user_id: str) -> UserProfile | None:
         """Load user profile."""
         ...

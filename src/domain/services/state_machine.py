@@ -1,8 +1,8 @@
 """State machine service - manages state transitions."""
 
-from typing import List
-from ..models.state import State, VALID_STATE_TRANSITIONS
+
 from ..exceptions import InvalidStateTransition
+from ..models.state import VALID_STATE_TRANSITIONS, State
 
 
 class StateMachine:
@@ -27,7 +27,7 @@ class StateMachine:
             )
         return to_state
 
-    def get_valid_next_states(self, current: State) -> List[State]:
+    def get_valid_next_states(self, current: State) -> list[State]:
         """Get all valid next states from current state."""
         return VALID_STATE_TRANSITIONS.get(current, [])
 

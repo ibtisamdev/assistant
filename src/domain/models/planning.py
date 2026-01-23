@@ -1,10 +1,10 @@
 """Planning domain models."""
 
-from pydantic import BaseModel, Field
-from typing import List, Optional
+import re
 from datetime import datetime
 from enum import Enum
-import re
+
+from pydantic import BaseModel, Field
 
 
 class TaskStatus(Enum):
@@ -32,9 +32,9 @@ class TimeEdit(BaseModel):
 
     edited_at: datetime = Field(default_factory=datetime.now)
     field: str = Field(description="Field that was edited (actual_start or actual_end)")
-    old_value: Optional[datetime] = Field(description="Previous value")
+    old_value: datetime | None = Field(description="Previous value")
     new_value: datetime = Field(description="New value")
-    reason: Optional[str] = Field(default=None, description="Reason for edit")
+    reason: str | None = Field(default=None, description="Reason for edit")
 
 
 class ScheduleItem(BaseModel):
@@ -42,15 +42,15 @@ class ScheduleItem(BaseModel):
 
     time: str = Field(description="Time in HH:MM-HH:MM format")
     task: str = Field(description="Description of the task")
-    duration_minutes: Optional[int] = None
+    duration_minutes: int | None = None
     priority: str = "medium"  # high/medium/low
 
     # Time tracking fields
-    estimated_minutes: Optional[int] = Field(
+    estimated_minutes: int | None = Field(
         default=None, description="LLM-estimated duration in minutes"
     )
-    actual_start: Optional[datetime] = Field(default=None, description="When task actually started")
-    actual_end: Optional[datetime] = Field(default=None, description="When task actually completed")
+    actual_start: datetime | None = Field(default=None, description="When task actually started")
+    actual_end: datetime | None = Field(default=None, description="When task actually completed")
     status: TaskStatus = Field(default=TaskStatus.not_started, description="Current task status")
 
     # Category for productivity tracking
@@ -60,7 +60,7 @@ class ScheduleItem(BaseModel):
     )
 
     # Audit trail for manual edits
-    edits: List[TimeEdit] = Field(default_factory=list, description="History of manual time edits")
+    edits: list[TimeEdit] = Field(default_factory=list, description="History of manual time edits")
 
     def validate_time_format(self) -> bool:
         """Validate time format HH:MM-HH:MM."""
@@ -85,7 +85,7 @@ class ScheduleItem(BaseModel):
             return 0
 
     @property
-    def actual_minutes(self) -> Optional[int]:
+    def actual_minutes(self) -> int | None:
         """Calculate actual duration from start/end timestamps."""
         if self.actual_start and self.actual_end:
             delta = self.actual_end - self.actual_start
@@ -93,7 +93,7 @@ class ScheduleItem(BaseModel):
         return None
 
     @property
-    def time_variance(self) -> Optional[int]:
+    def time_variance(self) -> int | None:
         """
         Calculate difference between estimated and actual time.
         Positive = took longer than expected
@@ -125,14 +125,14 @@ class Question(BaseModel):
 class Plan(BaseModel):
     """User's daily plan."""
 
-    schedule: List[ScheduleItem] = Field(description="The schedule of the day")
-    priorities: List[str] = Field(description="The priorities of the day")
+    schedule: list[ScheduleItem] = Field(description="The schedule of the day")
+    priorities: list[str] = Field(description="The priorities of the day")
     notes: str = Field(description="Additional notes")
 
     # Time tracking metadata
-    estimated_duration_minutes: Optional[int] = None
-    actual_duration_minutes: Optional[int] = None
-    completion_rate: Optional[float] = Field(
+    estimated_duration_minutes: int | None = None
+    actual_duration_minutes: int | None = None
+    completion_rate: float | None = Field(
         default=None, description="Percentage of tasks completed (0-100)"
     )
 
@@ -178,14 +178,14 @@ class Plan(BaseModel):
         self.completion_rate = rate
         return rate
 
-    def get_completed_tasks(self) -> List[ScheduleItem]:
+    def get_completed_tasks(self) -> list[ScheduleItem]:
         """Get list of completed tasks."""
         return [item for item in self.schedule if item.is_completed]
 
-    def get_pending_tasks(self) -> List[ScheduleItem]:
+    def get_pending_tasks(self) -> list[ScheduleItem]:
         """Get list of not started tasks."""
         return [item for item in self.schedule if item.status == TaskStatus.not_started]
 
-    def get_in_progress_tasks(self) -> List[ScheduleItem]:
+    def get_in_progress_tasks(self) -> list[ScheduleItem]:
         """Get list of tasks currently in progress."""
         return [item for item in self.schedule if item.is_in_progress]

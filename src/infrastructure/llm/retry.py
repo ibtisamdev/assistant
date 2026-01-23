@@ -2,8 +2,10 @@
 
 import asyncio
 import logging
-from typing import Callable, TypeVar
+from collections.abc import Callable
 from functools import wraps
+from typing import TypeVar
+
 from ...application.config import RetryConfig
 
 logger = logging.getLogger(__name__)

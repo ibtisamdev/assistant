@@ -1,15 +1,14 @@
 """Rich-formatted output."""
 
-from typing import List, Dict
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
-from rich.progress import Progress, BarColumn, TextColumn
+
 from rich import box
-from ...domain.models.planning import Plan, Question, TaskStatus, ScheduleItem
-from ...domain.models.state import State
-from ...domain.models.metrics import DailyMetrics, AggregateMetrics, EstimationAccuracy
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
+
+from ...domain.models.metrics import AggregateMetrics, DailyMetrics, EstimationAccuracy
+from ...domain.models.planning import Plan, TaskStatus
 
 console = Console()
 
@@ -39,6 +38,7 @@ class PlanFormatter:
 
         # Build content with proper sections
         from io import StringIO
+
         from rich.console import Console as RichConsole
 
         # Render table to string
@@ -52,7 +52,7 @@ class PlanFormatter:
         content.append(table_str)
         content.append("\nTop Priorities:\n", style="bold")
         content.append(priorities_text)
-        content.append(f"\n\nNotes: ", style="bold")
+        content.append("\n\nNotes: ", style="bold")
         content.append(plan.notes)
         content.append(f"\n\n⏱  Total time: {duration_str}", style="dim")
 
@@ -64,7 +64,7 @@ class PlanFormatter:
         )
 
     @staticmethod
-    def format_questions(questions: List[str]) -> Panel:
+    def format_questions(questions: list[str]) -> Panel:
         """Format questions."""
         questions_text = "\n\n".join(
             [f"[bold cyan]{i + 1}.[/bold cyan] {q}" for i, q in enumerate(questions)]
@@ -156,7 +156,7 @@ What do you think? Any changes needed?"""
         return table
 
     @staticmethod
-    def format_progress_stats(stats: Dict) -> Panel:
+    def format_progress_stats(stats: dict) -> Panel:
         """
         Format detailed progress statistics.
 
@@ -206,7 +206,7 @@ What do you think? Any changes needed?"""
   Actual:         {stats["actual_total"]} minutes
   Variance:       [{var_color}]{stats["total_variance"]:+d} minutes[/{var_color}]
   Avg per task:   [{var_color}]{avg_var:+.1f} minutes[/{var_color}]
-  
+
 [bold]Accuracy[/bold]
   {var_status}
 """
@@ -285,7 +285,7 @@ class SessionFormatter:
     """Session info formatting."""
 
     @staticmethod
-    def format_session_list(sessions: List[dict]) -> Table:
+    def format_session_list(sessions: list[dict]) -> Table:
         """Format session list as table."""
         from datetime import datetime
 
@@ -623,7 +623,7 @@ class MetricsFormatter:
 
 [bold]Total Time:[/bold]
   Planned: {planned_str} | Actual: {actual_str} ({var_sign}{var_str})
-  
+
 [bold]Daily Average:[/bold]
   Planned: {avg_planned} | Actual: {avg_actual}
 

@@ -3,13 +3,13 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
-from ..models.planning import Plan
-from ..models.session import Memory
 from ...application.config import StorageConfig
 from ...infrastructure.export.markdown import MarkdownExporter
 from ...infrastructure.export.summary import SummaryExporter
+from ..models.planning import Plan
+from ..models.session import Memory
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +19,9 @@ class ExportResult:
     """Result of an export operation."""
 
     success: bool
-    file_path: Optional[Path]
-    error: Optional[str] = None
-    stats: Optional[Dict[str, Any]] = None
+    file_path: Path | None
+    error: str | None = None
+    stats: dict[str, Any] | None = None
 
 
 class ExportService:
@@ -67,7 +67,7 @@ class ExportService:
         self,
         plan: Plan,
         date_str: str,
-        output_path: Optional[Path] = None,
+        output_path: Path | None = None,
     ) -> ExportResult:
         """
         Export a plan to Markdown.
@@ -100,7 +100,7 @@ class ExportService:
     async def export_summary(
         self,
         memory: Memory,
-        output_path: Optional[Path] = None,
+        output_path: Path | None = None,
     ) -> ExportResult:
         """
         Export an end-of-day summary to Markdown.
@@ -145,9 +145,9 @@ class ExportService:
     async def export_all(
         self,
         memory: Memory,
-        plan_path: Optional[Path] = None,
-        summary_path: Optional[Path] = None,
-    ) -> Dict[str, ExportResult]:
+        plan_path: Path | None = None,
+        summary_path: Path | None = None,
+    ) -> dict[str, ExportResult]:
         """
         Export both plan and summary.
 
@@ -183,7 +183,7 @@ class ExportService:
 
         return results
 
-    def _calculate_stats(self, plan: Plan) -> Dict[str, Any]:
+    def _calculate_stats(self, plan: Plan) -> dict[str, Any]:
         """Calculate summary statistics for the plan."""
         from ..models.planning import TaskStatus
 

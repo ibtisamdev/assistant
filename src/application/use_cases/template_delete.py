@@ -1,6 +1,7 @@
 """Delete template use case."""
 
 import logging
+
 from rich.console import Console
 from rich.prompt import Confirm
 

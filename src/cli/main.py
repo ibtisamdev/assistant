@@ -5,17 +5,17 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+
 import click
-from rich.console import Console
 from rich import print as rprint
+from rich.console import Console
 from rich.logging import RichHandler
 from rich.prompt import Confirm
 
 from ..application.config import AppConfig
 from ..application.container import Container
 from ..application.session_orchestrator import SessionOrchestrator
-from ..domain.exceptions import SessionNotFound, LLMError, StorageError
+from ..domain.exceptions import LLMError, SessionNotFound
 from .profile_setup import ProfileSetupWizard
 
 console = Console()
@@ -81,7 +81,7 @@ def start(ctx, date):
 
     async def _start():
         try:
-            memory = await orchestrator.run_new_session(date, force_new=False)
+            await orchestrator.run_new_session(date, force_new=False)
             rprint("\n[bold green]✓ Session complete![/bold green]\n")
         except KeyboardInterrupt:
             rprint("\n[yellow]Session interrupted. Progress saved.[/yellow]")
@@ -155,11 +155,11 @@ def revise(ctx, date):
     async def _revise():
         try:
             rprint("[bold yellow]Revising plan...[/bold yellow]\n")
-            memory = await orchestrator.run_revise(date)
+            await orchestrator.run_revise(date)
             rprint("\n[bold green]✓ Plan revised![/bold green]")
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
         except KeyboardInterrupt:
             rprint("\n[yellow]Cancelled. Progress saved.[/yellow]")
         except Exception as e:
@@ -186,7 +186,7 @@ def show(ctx, date):
 
         if not memory or not memory.agent_state.plan:
             rprint(f"[red]No plan found for {date}[/red]")
-            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
             return
 
         formatter = container.plan_formatter
@@ -297,7 +297,7 @@ def checkin(ctx, date, start, complete, skip, status):
             )
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
         except KeyboardInterrupt:
             rprint("\n[yellow]Check-in cancelled.[/yellow]")
         except Exception as e:
@@ -334,7 +334,7 @@ def export(ctx, date, output):
             await use_case.execute(session_id, output_path)
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -366,7 +366,7 @@ def summary(ctx, date, output):
             await use_case.execute(session_id, output_path)
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -396,7 +396,7 @@ def export_all(ctx, date):
             await use_case.execute(session_id)
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -451,13 +451,13 @@ def stats(ctx, date, week, month, from_date, to_date, output_json):
                 # Daily stats
                 from ..application.use_cases.view_stats import ViewStatsUseCase
 
-                use_case = ViewStatsUseCase(container)
+                daily_use_case = ViewStatsUseCase(container)
                 session_id = date or datetime.now().strftime("%Y-%m-%d")
-                await use_case.execute(session_id, output_json=output_json)
+                await daily_use_case.execute(session_id, output_json=output_json)
 
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint(f"[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -578,7 +578,7 @@ def profile(ctx, section, user_id):
 
             # Save updated profile
             await storage.save_profile(user_id, updated_profile)
-            rprint(f"\n[bold green]✓ Profile saved successfully![/bold green]")
+            rprint("\n[bold green]✓ Profile saved successfully![/bold green]")
 
         except KeyboardInterrupt:
             rprint("\n[yellow]Profile setup cancelled.[/yellow]")

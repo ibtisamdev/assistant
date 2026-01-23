@@ -1,7 +1,7 @@
 """Productivity metrics models."""
 
+
 from pydantic import BaseModel, Field
-from typing import Dict, List, Optional
 
 
 class TaskMetric(BaseModel):
@@ -9,9 +9,9 @@ class TaskMetric(BaseModel):
 
     task: str = Field(description="Task description")
     category: str = Field(description="Task category")
-    estimated_minutes: Optional[int] = Field(default=None, description="Estimated duration")
-    actual_minutes: Optional[int] = Field(default=None, description="Actual duration")
-    variance: Optional[int] = Field(
+    estimated_minutes: int | None = Field(default=None, description="Estimated duration")
+    actual_minutes: int | None = Field(default=None, description="Actual duration")
+    variance: int | None = Field(
         default=None, description="Difference (actual - estimated), positive = over time"
     )
     status: str = Field(description="Task status")
@@ -29,10 +29,10 @@ class EstimationAccuracy(BaseModel):
     tasks_within_15min_percent: float = Field(description="Percentage within +/- 15 min")
     underestimated_count: int = Field(description="Number of tasks that took longer than estimated")
     overestimated_count: int = Field(description="Number of tasks that took less than estimated")
-    most_underestimated: Optional[str] = Field(
+    most_underestimated: str | None = Field(
         default=None, description="Task name with largest positive variance"
     )
-    most_overestimated: Optional[str] = Field(
+    most_overestimated: str | None = Field(
         default=None, description="Task name with largest negative variance"
     )
 
@@ -46,7 +46,7 @@ class DailyMetrics(BaseModel):
     total_planned_minutes: int = Field(description="Total estimated/planned time")
     total_actual_minutes: int = Field(description="Total actual time spent")
     time_variance: int = Field(description="Total variance (actual - planned)")
-    time_by_category: Dict[str, int] = Field(
+    time_by_category: dict[str, int] = Field(
         default_factory=dict, description="Minutes spent per category"
     )
     productive_minutes: int = Field(default=0, description="Total productive time")
@@ -61,12 +61,12 @@ class DailyMetrics(BaseModel):
     completion_rate: float = Field(description="Percentage of tasks completed (0-100)")
 
     # Estimation accuracy
-    estimation_accuracy: Optional[EstimationAccuracy] = Field(
+    estimation_accuracy: EstimationAccuracy | None = Field(
         default=None, description="Estimation accuracy breakdown"
     )
 
     # Top time consumers
-    top_time_consumers: List[TaskMetric] = Field(
+    top_time_consumers: list[TaskMetric] = Field(
         default_factory=list, description="Most time-consuming tasks"
     )
 
@@ -79,7 +79,7 @@ class ProductivityPattern(BaseModel):
     )
     description: str = Field(description="Human-readable description of the pattern")
     confidence: float = Field(description="Confidence score (0-1)")
-    supporting_data: List[str] = Field(
+    supporting_data: list[str] = Field(
         default_factory=list, description="Day references supporting this pattern"
     )
 
@@ -100,25 +100,25 @@ class AggregateMetrics(BaseModel):
     avg_daily_actual_minutes: float = Field(description="Average actual time per day")
 
     # Category breakdown (aggregate)
-    total_by_category: Dict[str, int] = Field(
+    total_by_category: dict[str, int] = Field(
         default_factory=dict, description="Total minutes per category across all days"
     )
-    avg_daily_by_category: Dict[str, float] = Field(
+    avg_daily_by_category: dict[str, float] = Field(
         default_factory=dict, description="Average daily minutes per category"
     )
-    category_percentages: Dict[str, float] = Field(
+    category_percentages: dict[str, float] = Field(
         default_factory=dict, description="Percentage of time per category"
     )
 
     # Completion trends
     avg_completion_rate: float = Field(description="Average completion rate across days")
-    completion_rate_by_day: Dict[str, float] = Field(
+    completion_rate_by_day: dict[str, float] = Field(
         default_factory=dict, description="Completion rate per day for trend visualization"
     )
     total_tasks: int = Field(default=0, description="Total tasks across all days")
     total_completed: int = Field(default=0, description="Total completed tasks")
-    best_day: Optional[str] = Field(default=None, description="Day with highest completion rate")
-    worst_day: Optional[str] = Field(default=None, description="Day with lowest completion rate")
+    best_day: str | None = Field(default=None, description="Day with highest completion rate")
+    worst_day: str | None = Field(default=None, description="Day with lowest completion rate")
 
     # Estimation trends
     avg_estimation_accuracy: float = Field(
@@ -127,6 +127,6 @@ class AggregateMetrics(BaseModel):
     avg_variance: float = Field(default=0.0, description="Average time variance across all tasks")
 
     # Patterns (insights)
-    patterns: List[ProductivityPattern] = Field(
+    patterns: list[ProductivityPattern] = Field(
         default_factory=list, description="Identified productivity patterns"
     )

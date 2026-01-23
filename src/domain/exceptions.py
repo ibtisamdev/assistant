@@ -1,10 +1,14 @@
 """Domain-specific exceptions."""
 
 
-class DomainException(Exception):
+class DomainError(Exception):
     """Base domain exception."""
 
     pass
+
+
+# Alias for backward compatibility
+DomainException = DomainError
 
 
 class InvalidStateTransition(DomainException):

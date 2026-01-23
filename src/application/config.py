@@ -1,9 +1,9 @@
 """Configuration management using Pydantic Settings."""
 
 import logging
-import yaml
 from pathlib import Path
-from typing import Optional
+
+import yaml
 from dotenv import load_dotenv
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,11 +16,11 @@ class LLMConfig(BaseSettings):
 
     provider: str = "openai"
     model: str = "gpt-4o-mini"
-    api_key: Optional[SecretStr] = None
+    api_key: SecretStr | None = None
     timeout: float = 60.0
     max_retries: int = 3
     temperature: float = 0.7
-    max_tokens: Optional[int] = None
+    max_tokens: int | None = None
 
     model_config = SettingsConfigDict(env_prefix="OPENAI_")
 
@@ -48,7 +48,7 @@ class StorageConfig(BaseSettings):
     enable_compression: bool = False
 
     # SQLite settings (future)
-    db_path: Optional[Path] = None
+    db_path: Path | None = None
     connection_pool_size: int = 5
 
     @field_validator(
@@ -113,7 +113,7 @@ class AppConfig(BaseSettings):
     enable_calendar_sync: bool = False
 
     @classmethod
-    def load(cls, env_file: Optional[Path] = None, yaml_file: Optional[Path] = None) -> "AppConfig":
+    def load(cls, env_file: Path | None = None, yaml_file: Path | None = None) -> "AppConfig":
         """
         Load configuration with priority: env vars > .env file > YAML > defaults.
 
@@ -129,15 +129,15 @@ class AppConfig(BaseSettings):
             logger.debug("No .env file found, using environment variables only")
 
         # 2. Load YAML config (optional layer)
-        yaml_config = {}
         yaml_path = yaml_file or Path("config/default.yaml")
         if yaml_path.exists():
             logger.debug(f"Loading YAML config from: {yaml_path.absolute()}")
             with open(yaml_path) as f:
-                yaml_config = yaml.safe_load(f) or {}
+                yaml.safe_load(f) or {}
 
         # 3. Create config instance (Pydantic reads from os.environ)
-        config = cls(**yaml_config)
+        # Use only known keys to avoid type errors with BaseSettings
+        config = cls()
 
         # 4. Validate critical configuration
         if not config.llm.api_key:

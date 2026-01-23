@@ -3,7 +3,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+
 import aiofiles
 
 from ...domain.models.planning import Plan, ScheduleItem
@@ -22,7 +22,7 @@ class MarkdownExporter:
         except ValueError:
             return date_str
 
-    def _format_duration(self, minutes: Optional[int]) -> str:
+    def _format_duration(self, minutes: int | None) -> str:
         """Format minutes as human-readable duration."""
         if not minutes:
             return ""
@@ -61,7 +61,7 @@ class MarkdownExporter:
 
         return " ".join(parts)
 
-    def to_string(self, plan: Plan, date_str: Optional[str] = None) -> str:
+    def to_string(self, plan: Plan, date_str: str | None = None) -> str:
         """
         Convert plan to Markdown string with checkboxes.
 
@@ -125,7 +125,7 @@ class MarkdownExporter:
 
         return "\n".join(lines)
 
-    async def export(self, plan: Plan, output_path: Path, date_str: Optional[str] = None) -> Path:
+    async def export(self, plan: Plan, output_path: Path, date_str: str | None = None) -> Path:
         """
         Export plan to Markdown file.
 

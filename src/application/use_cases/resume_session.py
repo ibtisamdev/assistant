@@ -1,8 +1,9 @@
 """Resume session use case."""
 
 import logging
-from ...domain.models.state import State
+
 from ...domain.exceptions import SessionNotFound
+from ...domain.models.state import State
 from ..container import Container
 from .create_plan import CreatePlanUseCase
 
@@ -60,6 +61,10 @@ class ResumeSessionUseCase:
 
         # Continue workflow using create plan logic
         profile = await self.storage.load_profile(memory.user_profile_id)
+        if not profile:
+            from ...domain.models.profile import UserProfile
+
+            profile = UserProfile(user_id=memory.user_profile_id)
 
         while memory.agent_state.state != State.done:
             if memory.agent_state.state == State.questions:
@@ -68,8 +73,7 @@ class ResumeSessionUseCase:
                 await self.create_plan_uc._handle_feedback(memory, session_id)
 
         # Update planning history when resuming completes
-        if profile:
-            await self.create_plan_uc._update_planning_history(profile, memory, session_id)
+        await self.create_plan_uc._update_planning_history(profile, memory, session_id)
 
         self.progress.print_success("Session resumed and completed!")
         return memory

@@ -1,6 +1,7 @@
 """Export protocol for future export features."""
 
 from typing import Protocol
+
 from ..models.planning import Plan
 
 

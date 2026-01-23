@@ -1,16 +1,22 @@
 """Import tasks use case - import incomplete tasks from previous sessions."""
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
-from typing import Optional, List
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Confirm, IntPrompt
+from typing import TYPE_CHECKING
 
-from ...domain.models import State, Plan, ScheduleItem, TaskStatus
-from ...domain.services.task_import_service import TaskImportService
+from rich.console import Console
+from rich.prompt import Confirm
+from rich.table import Table
+
 from ...domain.exceptions import SessionNotFound
+from ...domain.models import ScheduleItem, TaskStatus
+from ...domain.services.task_import_service import TaskImportService
 from ..container import Container
+
+if TYPE_CHECKING:
+    from ...domain.models.session import Memory
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +39,8 @@ class ImportTasksUseCase:
 
     async def execute(
         self,
-        target_session_id: Optional[str] = None,
-        source_session_id: Optional[str] = None,
+        target_session_id: str | None = None,
+        source_session_id: str | None = None,
         import_all: bool = False,
         include_skipped: bool = False,
     ) -> bool:
@@ -112,7 +118,7 @@ class ImportTasksUseCase:
 
         return True
 
-    def _display_candidates(self, tasks: List[ScheduleItem], source_date: str) -> None:
+    def _display_candidates(self, tasks: list[ScheduleItem], source_date: str) -> None:
         """Display import candidates in a table."""
         self.console.print(f"\n[bold]Incomplete tasks from {source_date}:[/bold]\n")
 
@@ -142,7 +148,7 @@ class ImportTasksUseCase:
 
         self.console.print(table)
 
-    async def _select_tasks(self, tasks: List[ScheduleItem]) -> List[ScheduleItem]:
+    async def _select_tasks(self, tasks: list[ScheduleItem]) -> list[ScheduleItem]:
         """Let user select which tasks to import."""
         self.console.print("\n[bold]Select tasks to import:[/bold]")
         self.console.print("[dim]Enter task numbers (comma-separated), 'all', or 'none'[/dim]")
@@ -167,9 +173,13 @@ class ImportTasksUseCase:
             return []
 
     async def _import_tasks(
-        self, target: "Memory", tasks: List[ScheduleItem], session_id: str
+        self, target: Memory, tasks: list[ScheduleItem], session_id: str
     ) -> None:
         """Import tasks into target session."""
+        if target.agent_state.plan is None:
+            self.console.print("[red]No plan exists to import tasks into[/red]")
+            return
+
         # Prepare tasks for new day
         prepared = self.task_import.prepare_tasks_for_import(tasks)
 

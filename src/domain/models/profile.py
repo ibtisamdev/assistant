@@ -1,8 +1,8 @@
 """User profile models."""
 
 from datetime import datetime
+
 from pydantic import BaseModel, Field
-from typing import Optional, List
 
 
 class WorkHours(BaseModel):
@@ -10,7 +10,7 @@ class WorkHours(BaseModel):
 
     start: str = Field(description="Start time in HH:MM format", default="09:00")
     end: str = Field(description="End time in HH:MM format", default="17:00")
-    days: List[str] = Field(
+    days: list[str] = Field(
         description="Work days",
         default=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
     )
@@ -30,15 +30,15 @@ class RecurringTask(BaseModel):
     name: str
     frequency: str  # daily, weekly, etc.
     duration: int  # minutes
-    preferred_time: Optional[str] = None  # HH:MM format
+    preferred_time: str | None = None  # HH:MM format
     priority: str = "medium"  # high/medium/low
 
 
 class PersonalInfo(BaseModel):
     """User's personal information and communication preferences."""
 
-    name: Optional[str] = Field(default=None, description="User's full name")
-    preferred_name: Optional[str] = Field(default=None, description="Nickname or preferred name")
+    name: str | None = Field(default=None, description="User's full name")
+    preferred_name: str | None = Field(default=None, description="Nickname or preferred name")
     communication_style: str = Field(
         default="balanced",
         description="Preferred communication style: concise, detailed, or balanced",
@@ -52,15 +52,15 @@ class ProductivityHabits(BaseModel):
         default=25, description="Minutes per focus block (e.g., Pomodoro)"
     )
     max_deep_work_hours: int = Field(default=4, description="Maximum hours of deep work per day")
-    distraction_triggers: List[str] = Field(
+    distraction_triggers: list[str] = Field(
         default_factory=list,
         description="Known distraction sources (e.g., social media, email)",
     )
-    procrastination_patterns: List[str] = Field(
+    procrastination_patterns: list[str] = Field(
         default_factory=list,
         description="Patterns when procrastination occurs (e.g., afternoons, large tasks)",
     )
-    peak_productivity_time: Optional[str] = Field(
+    peak_productivity_time: str | None = Field(
         default=None, description="Best time for productivity: morning, afternoon, evening"
     )
 
@@ -68,15 +68,15 @@ class ProductivityHabits(BaseModel):
 class WellnessSchedule(BaseModel):
     """Health and wellness timing preferences."""
 
-    wake_time: Optional[str] = Field(default=None, description="Typical wake time in HH:MM format")
-    sleep_time: Optional[str] = Field(
+    wake_time: str | None = Field(default=None, description="Typical wake time in HH:MM format")
+    sleep_time: str | None = Field(
         default=None, description="Typical sleep time in HH:MM format"
     )
-    meal_times: List[dict] = Field(
+    meal_times: list[dict] = Field(
         default_factory=list,
         description="Regular meal times: [{'name': 'lunch', 'time': '12:00', 'duration': 30}]",
     )
-    exercise_times: List[dict] = Field(
+    exercise_times: list[dict] = Field(
         default_factory=list,
         description="Exercise schedule: [{'day': 'Monday', 'time': '07:00', 'duration': 60}]",
     )
@@ -85,11 +85,11 @@ class WellnessSchedule(BaseModel):
 class WorkContext(BaseModel):
     """Professional work context and collaboration patterns."""
 
-    job_role: Optional[str] = Field(default=None, description="User's job title or role")
-    meeting_heavy_days: List[str] = Field(
+    job_role: str | None = Field(default=None, description="User's job title or role")
+    meeting_heavy_days: list[str] = Field(
         default_factory=list, description="Days with many meetings (e.g., Tuesday, Thursday)"
     )
-    deadline_patterns: Optional[str] = Field(
+    deadline_patterns: str | None = Field(
         default=None,
         description="Typical deadline patterns (e.g., end of sprint, monthly, quarterly)",
     )
@@ -109,13 +109,13 @@ class LearningPreferences(BaseModel):
         default="mixed",
         description="Preferred learning style: visual, auditory, kinesthetic, reading, mixed",
     )
-    skill_development_goals: List[str] = Field(
+    skill_development_goals: list[str] = Field(
         default_factory=list, description="Skills currently being developed"
     )
-    areas_of_interest: List[str] = Field(
+    areas_of_interest: list[str] = Field(
         default_factory=list, description="Topics of interest for learning"
     )
-    preferred_learning_time: Optional[str] = Field(
+    preferred_learning_time: str | None = Field(
         default=None, description="Best time for learning activities"
     )
 
@@ -123,22 +123,22 @@ class LearningPreferences(BaseModel):
 class PlanningHistory(BaseModel):
     """Learned patterns from past planning sessions (auto-updated by agent)."""
 
-    successful_patterns: List[str] = Field(
+    successful_patterns: list[str] = Field(
         default_factory=list, description="Planning approaches that worked well"
     )
-    avoided_patterns: List[str] = Field(
+    avoided_patterns: list[str] = Field(
         default_factory=list, description="Planning approaches that didn't work"
     )
-    common_adjustments: List[str] = Field(
+    common_adjustments: list[str] = Field(
         default_factory=list, description="Frequent plan modifications made by user"
     )
-    feedback_notes: List[str] = Field(
+    feedback_notes: list[str] = Field(
         default_factory=list, description="User's explicit feedback on plans"
     )
     sessions_completed: int = Field(
         default=0, description="Total number of completed planning sessions"
     )
-    last_session_date: Optional[str] = Field(
+    last_session_date: str | None = Field(
         default=None, description="Date of most recent session (YYYY-MM-DD)"
     )
 
@@ -161,16 +161,16 @@ class UserProfile(BaseModel):
     break_frequency: int = Field(description="Minutes between breaks", default=90)
 
     # Habits and constraints
-    recurring_tasks: List[RecurringTask] = Field(default_factory=list)
-    blocked_times: List[dict] = Field(
+    recurring_tasks: list[RecurringTask] = Field(default_factory=list)
+    blocked_times: list[dict] = Field(
         description="Times unavailable for planning", default_factory=list
     )  # Format: [{"start": "12:00", "end": "13:00", "reason": "lunch"}]
 
     # Priorities and goals
-    top_priorities: List[str] = Field(
+    top_priorities: list[str] = Field(
         description="User's current top priorities", default_factory=list
     )
-    long_term_goals: List[str] = Field(
+    long_term_goals: list[str] = Field(
         description="Long-term goals to align daily plans with", default_factory=list
     )
 

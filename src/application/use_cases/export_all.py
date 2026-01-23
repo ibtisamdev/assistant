@@ -2,11 +2,11 @@
 
 import logging
 from pathlib import Path
-from typing import Optional, Dict
+
 from rich.console import Console
 
-from ...domain.services.export_service import ExportService, ExportResult
 from ...domain.exceptions import SessionNotFound
+from ...domain.services.export_service import ExportResult, ExportService
 from ..container import Container
 
 logger = logging.getLogger(__name__)
@@ -24,9 +24,9 @@ class ExportAllUseCase:
     async def execute(
         self,
         session_id: str,
-        plan_path: Optional[Path] = None,
-        summary_path: Optional[Path] = None,
-    ) -> Dict[str, ExportResult]:
+        plan_path: Path | None = None,
+        summary_path: Path | None = None,
+    ) -> dict[str, ExportResult]:
         """
         Export both plan and summary to Markdown.
 
@@ -61,7 +61,7 @@ class ExportAllUseCase:
 
         return results
 
-    def _display_results(self, results: Dict[str, ExportResult]) -> None:
+    def _display_results(self, results: dict[str, ExportResult]) -> None:
         """Display export results."""
         self.console.print()
 

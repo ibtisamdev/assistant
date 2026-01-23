@@ -1,16 +1,9 @@
 """Interactive profile setup wizard."""
 
-from typing import Optional, List
+
 from src.domain.models.profile import (
-    UserProfile,
-    PersonalInfo,
-    ProductivityHabits,
-    WellnessSchedule,
-    WorkContext,
-    LearningPreferences,
-    WorkHours,
-    EnergyPattern,
     RecurringTask,
+    UserProfile,
 )
 
 
@@ -18,9 +11,9 @@ class ProfileSetupWizard:
     """Interactive CLI wizard for setting up user profile."""
 
     def __init__(self):
-        self.profile: Optional[UserProfile] = None
+        self.profile: UserProfile | None = None
 
-    def run_full_setup(self, existing_profile: Optional[UserProfile] = None) -> UserProfile:
+    def run_full_setup(self, existing_profile: UserProfile | None = None) -> UserProfile:
         """Run complete profile setup wizard."""
         print("\n" + "=" * 60)
         print("Welcome to the Personal Planning Assistant Profile Setup")
@@ -402,7 +395,7 @@ class ProfileSetupWizard:
 
     # Helper methods
 
-    def _prompt(self, question: str, default: Optional[str] = None) -> str:
+    def _prompt(self, question: str, default: str | None = None) -> str:
         """Prompt user for input with optional default."""
         if default:
             user_input = input(f"{question} [{default}]: ").strip()
@@ -410,7 +403,7 @@ class ProfileSetupWizard:
         else:
             return input(f"{question}: ").strip()
 
-    def _prompt_int(self, question: str, default: Optional[int] = None) -> Optional[int]:
+    def _prompt_int(self, question: str, default: int | None = None) -> int | None:
         """Prompt user for integer input."""
         default_str = str(default) if default is not None else None
         result = self._prompt(question, default_str)
@@ -425,8 +418,8 @@ class ProfileSetupWizard:
     def _prompt_choice(
         self,
         question: str,
-        choices: List[str],
-        default: Optional[str] = None,
+        choices: list[str],
+        default: str | None = None,
         allow_empty: bool = False,
     ) -> str:
         """Prompt user to choose from a list."""
@@ -442,8 +435,8 @@ class ProfileSetupWizard:
             print(f"Invalid choice. Please choose from: {choices_str}")
 
     def _prompt_list(
-        self, question: str, default: Optional[List[str]] = None
-    ) -> Optional[List[str]]:
+        self, question: str, default: list[str] | None = None
+    ) -> list[str] | None:
         """Prompt user for comma-separated list."""
         default_str = ", ".join(default) if default else None
         result = self._prompt(question, default_str)

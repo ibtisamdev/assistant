@@ -2,12 +2,12 @@
 
 import logging
 from datetime import datetime
-from pydantic import BaseModel, Field, model_validator
-from typing import Optional, List
 
-from .state import State
-from .planning import Plan, Question
+from pydantic import BaseModel, Field, model_validator
+
 from .conversation import ConversationHistory
+from .planning import Plan, Question
+from .state import State
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ class AgentState(BaseModel):
     """Current runtime state of the agent."""
 
     state: State = Field(default=State.idle)
-    plan: Optional[Plan] = Field(default=None)
-    questions: List[Question] = Field(default_factory=list)
+    plan: Plan | None = Field(default=None)
+    questions: list[Question] = Field(default_factory=list)
 
     # Track what has been done
     questions_asked: bool = Field(default=False)
@@ -97,10 +97,10 @@ class Session(BaseModel):
     Only used for parsing LLM responses.
     """
 
-    plan: Optional[Plan] = Field(
+    plan: Plan | None = Field(
         default=None, description="The plan of the day (optional in questions state)"
     )
-    questions: List[str] = Field(description="Clarifying questions for the user")
+    questions: list[str] = Field(description="Clarifying questions for the user")
     state: State = Field(description="Next state the agent should transition to")
 
     @model_validator(mode="after")

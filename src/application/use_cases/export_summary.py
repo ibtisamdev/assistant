@@ -2,12 +2,12 @@
 
 import logging
 from pathlib import Path
-from typing import Optional
+
 from rich.console import Console
 from rich.panel import Panel
 
-from ...domain.services.export_service import ExportService, ExportResult
 from ...domain.exceptions import SessionNotFound
+from ...domain.services.export_service import ExportResult, ExportService
 from ..container import Container
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class ExportSummaryUseCase:
     async def execute(
         self,
         session_id: str,
-        output_path: Optional[Path] = None,
+        output_path: Path | None = None,
     ) -> ExportResult:
         """
         Export an end-of-day summary to Markdown.
@@ -78,7 +78,7 @@ class ExportSummaryUseCase:
             time_info += f" | Actual: {self._format_duration(actual)}"
 
         panel_content = f"""[bold]Quick Summary[/bold]
-        
+
 Completion: {completed}/{total_tasks} tasks ({completion_rate}%)
 {time_info}"""
 

@@ -2,16 +2,16 @@
 
 import logging
 from datetime import datetime
-from typing import Optional
-from rich.console import Console
-from rich.prompt import Prompt, Confirm
-from rich.table import Table
-from rich.panel import Panel
 
-from ...domain.models.session import Memory
-from ...domain.models.planning import TaskStatus, TaskCategory
-from ...domain.services.time_tracking_service import TimeTrackingService
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
+
 from ...domain.exceptions import SessionNotFound
+from ...domain.models.planning import TaskCategory, TaskStatus
+from ...domain.models.session import Memory
+from ...domain.services.time_tracking_service import TimeTrackingService
 from ..container import Container
 
 logger = logging.getLogger(__name__)
@@ -30,9 +30,9 @@ class CheckinUseCase:
     async def execute(
         self,
         session_id: str,
-        quick_start: Optional[str] = None,
-        quick_complete: Optional[str] = None,
-        quick_skip: Optional[str] = None,
+        quick_start: str | None = None,
+        quick_complete: str | None = None,
+        quick_skip: str | None = None,
         show_status_only: bool = False,
     ) -> Memory:
         """
@@ -127,6 +127,7 @@ class CheckinUseCase:
     async def _interactive_start_task(self, memory: Memory) -> None:
         """Interactive task start."""
         plan = memory.agent_state.plan
+        assert plan is not None  # Verified in execute()
 
         # Show pending tasks
         pending = [item for item in plan.schedule if item.status == TaskStatus.not_started]
@@ -167,6 +168,7 @@ class CheckinUseCase:
     async def _interactive_complete_task(self, memory: Memory) -> None:
         """Interactive task completion."""
         plan = memory.agent_state.plan
+        assert plan is not None  # Verified in execute()
 
         # Find in-progress or next task
         next_task = self.tracking_service.get_next_task(plan)
@@ -197,6 +199,7 @@ class CheckinUseCase:
     async def _interactive_skip_task(self, memory: Memory) -> None:
         """Interactive task skip."""
         plan = memory.agent_state.plan
+        assert plan is not None  # Verified in execute()
 
         # Show tasks that can be skipped
         skippable = [
@@ -235,6 +238,7 @@ class CheckinUseCase:
     async def _interactive_edit_times(self, memory: Memory) -> None:
         """Interactive timestamp editing with audit trail."""
         plan = memory.agent_state.plan
+        assert plan is not None  # Verified in execute()
 
         # Show tasks with timestamps
         tracked = [item for item in plan.schedule if item.actual_start or item.actual_end]
@@ -290,6 +294,7 @@ class CheckinUseCase:
     async def _quick_start_task(self, memory: Memory, task_name: str) -> None:
         """Quick start a task by name."""
         plan = memory.agent_state.plan
+        assert plan is not None  # Verified in execute()
         task = self.tracking_service.find_task_by_name(plan, task_name)
 
         if not task:
@@ -306,6 +311,7 @@ class CheckinUseCase:
     async def _quick_complete_task(self, memory: Memory, task_name: str) -> None:
         """Quick complete a task by name."""
         plan = memory.agent_state.plan
+        assert plan is not None  # Verified in execute()
         task = self.tracking_service.find_task_by_name(plan, task_name)
 
         if not task:
@@ -322,6 +328,7 @@ class CheckinUseCase:
     async def _quick_skip_task(self, memory: Memory, task_name: str) -> None:
         """Quick skip a task by name."""
         plan = memory.agent_state.plan
+        assert plan is not None  # Verified in execute()
         task = self.tracking_service.find_task_by_name(plan, task_name)
 
         if not task:
@@ -338,6 +345,7 @@ class CheckinUseCase:
     async def _interactive_edit_categories(self, memory: Memory) -> None:
         """Interactive category editing for tasks."""
         plan = memory.agent_state.plan
+        assert plan is not None  # Verified in execute()
 
         # Category colors for display
         category_colors = {

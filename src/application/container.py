@@ -1,19 +1,19 @@
 """Dependency injection container - lazy initialization."""
 
-from typing import Optional
-from pathlib import Path
-from .config import AppConfig
-from ..domain.services.state_machine import StateMachine
-from ..domain.services.planning_service import PlanningService
+from typing import Any
+
 from ..domain.services.agent_service import AgentService
-from ..domain.services.time_tracking_service import TimeTrackingService
 from ..domain.services.export_service import ExportService
+from ..domain.services.planning_service import PlanningService
+from ..domain.services.state_machine import StateMachine
+from ..domain.services.time_tracking_service import TimeTrackingService
+from ..infrastructure.io.formatters import PlanFormatter, ProgressFormatter, SessionFormatter
+from ..infrastructure.io.input_handler import InputHandler
 from ..infrastructure.llm.openai_provider import OpenAIProvider
 from ..infrastructure.llm.retry import RetryStrategy
-from ..infrastructure.storage.json_storage import JSONStorage
 from ..infrastructure.storage.cache import StorageCache
-from ..infrastructure.io.input_handler import InputHandler
-from ..infrastructure.io.formatters import PlanFormatter, SessionFormatter, ProgressFormatter
+from ..infrastructure.storage.json_storage import JSONStorage
+from .config import AppConfig
 
 
 class Container:
@@ -23,18 +23,18 @@ class Container:
         self.config = config
 
         # Private attributes for lazy init
-        self._llm_provider: Optional[OpenAIProvider] = None
-        self._storage: Optional[JSONStorage] = None
-        self._cache: Optional[StorageCache] = None
-        self._state_machine: Optional[StateMachine] = None
-        self._planning_service: Optional[PlanningService] = None
-        self._agent_service: Optional[AgentService] = None
-        self._input_handler: Optional[InputHandler] = None
-        self._plan_formatter: Optional[PlanFormatter] = None
-        self._session_formatter: Optional[SessionFormatter] = None
-        self._progress_formatter: Optional[ProgressFormatter] = None
-        self._time_tracking_service: Optional[TimeTrackingService] = None
-        self._export_service: Optional[ExportService] = None
+        self._llm_provider: OpenAIProvider | None = None
+        self._storage: Any = None  # Can be JSONStorage or SQLiteStorage
+        self._cache: StorageCache | None = None
+        self._state_machine: StateMachine | None = None
+        self._planning_service: PlanningService | None = None
+        self._agent_service: AgentService | None = None
+        self._input_handler: InputHandler | None = None
+        self._plan_formatter: PlanFormatter | None = None
+        self._session_formatter: SessionFormatter | None = None
+        self._progress_formatter: ProgressFormatter | None = None
+        self._time_tracking_service: TimeTrackingService | None = None
+        self._export_service: ExportService | None = None
 
     @property
     def llm_provider(self) -> OpenAIProvider:
@@ -45,7 +45,7 @@ class Container:
             # Wrap generate_structured with retry strategy
             retry_strategy = RetryStrategy(self.config.retry)
             original_method = provider.generate_structured
-            provider.generate_structured = retry_strategy(original_method)
+            setattr(provider, "generate_structured", retry_strategy(original_method))
 
             self._llm_provider = provider
 
@@ -54,7 +54,7 @@ class Container:
     @property
     def storage(self) -> JSONStorage:
         """Get storage backend."""
-        if not self._storage:
+        if self._storage is None:
             if self.config.storage.backend == "json":
                 self._storage = JSONStorage(self.config.storage)
             elif self.config.storage.backend == "sqlite":

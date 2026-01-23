@@ -1,8 +1,9 @@
 """Revise plan use case."""
 
 import logging
-from ...domain.models.state import State
+
 from ...domain.exceptions import SessionNotFound
+from ...domain.models.state import State
 from ..container import Container
 from .create_plan import CreatePlanUseCase
 

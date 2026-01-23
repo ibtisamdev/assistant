@@ -1,17 +1,15 @@
 """View aggregate productivity statistics use case."""
 
 import logging
-from datetime import datetime, timedelta
-from typing import Optional, List
 
 from rich.console import Console
 
-from ..container import Container
 from ...domain.exceptions import SessionNotFound
-from ...domain.services.metrics_service import MetricsService
 from ...domain.models.metrics import AggregateMetrics
 from ...domain.models.session import Memory
+from ...domain.services.metrics_service import MetricsService
 from ...infrastructure.io.formatters import MetricsFormatter
+from ..container import Container
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +27,8 @@ class ViewAggregateStatsUseCase:
         self,
         week: bool = False,
         month: bool = False,
-        from_date: Optional[str] = None,
-        to_date: Optional[str] = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
         output_json: bool = False,
     ) -> AggregateMetrics:
         """
@@ -86,7 +84,7 @@ class ViewAggregateStatsUseCase:
         )
         return metrics
 
-    async def _load_all_sessions(self) -> List[Memory]:
+    async def _load_all_sessions(self) -> list[Memory]:
         """Load all sessions that have plans."""
         session_list = await self.storage.list_sessions()
         sessions = []

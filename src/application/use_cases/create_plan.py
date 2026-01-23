@@ -1,12 +1,13 @@
 """Create plan use case."""
 
 import logging
-from datetime import datetime
+
 from rich.prompt import Confirm
-from ...domain.models.session import Memory, SessionMetadata, AgentState
+
 from ...domain.models.conversation import ConversationHistory
-from ...domain.models.state import State
 from ...domain.models.profile import UserProfile
+from ...domain.models.session import AgentState, Memory, SessionMetadata
+from ...domain.models.state import State
 from ...domain.services.task_import_service import TaskImportService
 from ..container import Container
 
@@ -185,7 +186,7 @@ class CreatePlanUseCase:
         """
         from rich.console import Console
         from rich.table import Table
-        from ...domain.models.planning import TaskStatus
+
 
         console = Console()
 

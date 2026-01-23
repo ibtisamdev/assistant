@@ -1,7 +1,7 @@
 """Show template use case."""
 
 import logging
-from typing import Optional
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -20,7 +20,7 @@ class ShowTemplateUseCase:
         self.storage = container.storage
         self.console = Console()
 
-    async def execute(self, name: str) -> Optional[DayTemplate]:
+    async def execute(self, name: str) -> DayTemplate | None:
         """
         Display template details.
 

@@ -1,11 +1,11 @@
 """Async user input with validation."""
 
 import asyncio
-from typing import Optional
-from rich.prompt import Prompt
+
 from rich.console import Console
+from rich.prompt import Prompt
+
 from ...application.config import InputConfig
-from ...domain.exceptions import QuestionValidationError
 
 console = Console()
 
@@ -24,7 +24,7 @@ class InputHandler:
             allow_empty=False,
         )
 
-    async def get_feedback(self) -> Optional[str]:
+    async def get_feedback(self) -> str | None:
         """Get feedback (can exit with special keywords)."""
         feedback = await self._get_validated_input(
             prompt="Enter feedback (or 'no'/'done' to finish)",

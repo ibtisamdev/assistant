@@ -1,16 +1,17 @@
 """Async JSON file storage - optimized for DB migration."""
 
-import aiofiles
-import json
 import asyncio
+import json
 import logging
 from pathlib import Path
-from typing import Optional, List
-from ...domain.models.session import Memory
-from ...domain.models.profile import UserProfile
-from ...domain.models.template import DayTemplate, TemplateMetadata
-from ...domain.exceptions import StorageError
+
+import aiofiles
+
 from ...application.config import StorageConfig
+from ...domain.exceptions import StorageError
+from ...domain.models.profile import UserProfile
+from ...domain.models.session import Memory
+from ...domain.models.template import DayTemplate, TemplateMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ class JSONStorage:
                     pass
             raise StorageError(f"Failed to save session: {e}") from e
 
-    async def load_session(self, session_id: str) -> Optional[Memory]:
+    async def load_session(self, session_id: str) -> Memory | None:
         """Load with corruption recovery."""
         path = self.sessions_dir / f"{session_id}.json"
 
@@ -66,7 +67,7 @@ class JSONStorage:
             return None
 
         try:
-            async with aiofiles.open(path, "r") as f:
+            async with aiofiles.open(path) as f:
                 content = await f.read()
 
             data = json.loads(content)
@@ -88,7 +89,7 @@ class JSONStorage:
             logger.error(f"Failed to load session {session_id}: {e}")
             return None
 
-    async def list_sessions(self) -> List[dict]:
+    async def list_sessions(self) -> list[dict]:
         """List all sessions (metadata only for performance)."""
         sessions = []
 
@@ -98,7 +99,7 @@ class JSONStorage:
 
             try:
                 # Only read metadata for listing (not full session)
-                async with aiofiles.open(path, "r") as f:
+                async with aiofiles.open(path) as f:
                     content = await f.read()
                 data = json.loads(content)
 
@@ -147,7 +148,7 @@ class JSONStorage:
             logger.error(f"Failed to save profile {user_id}: {e}")
             raise StorageError(f"Failed to save profile: {e}") from e
 
-    async def load_profile(self, user_id: str) -> Optional[UserProfile]:
+    async def load_profile(self, user_id: str) -> UserProfile | None:
         """Load user profile."""
         path = self.profiles_dir / f"{user_id}.json"
 
@@ -159,7 +160,7 @@ class JSONStorage:
             return default_profile
 
         try:
-            async with aiofiles.open(path, "r") as f:
+            async with aiofiles.open(path) as f:
                 content = await f.read()
             data = json.loads(content)
             return UserProfile.model_validate(data)
@@ -201,7 +202,7 @@ class JSONStorage:
             logger.error(f"Failed to save template '{name}': {e}")
             raise StorageError(f"Failed to save template: {e}") from e
 
-    async def load_template(self, name: str) -> Optional[DayTemplate]:
+    async def load_template(self, name: str) -> DayTemplate | None:
         """Load a day template by name."""
         safe_name = self._sanitize_template_name(name)
         path = self.templates_dir / f"{safe_name}.json"
@@ -210,7 +211,7 @@ class JSONStorage:
             return None
 
         try:
-            async with aiofiles.open(path, "r") as f:
+            async with aiofiles.open(path) as f:
                 content = await f.read()
 
             data = json.loads(content)
@@ -225,13 +226,13 @@ class JSONStorage:
             logger.error(f"Failed to load template '{name}': {e}")
             return None
 
-    async def list_templates(self) -> List[TemplateMetadata]:
+    async def list_templates(self) -> list[TemplateMetadata]:
         """List all saved templates (metadata only)."""
         templates = []
 
         for path in self.templates_dir.glob("*.json"):
             try:
-                async with aiofiles.open(path, "r") as f:
+                async with aiofiles.open(path) as f:
                     content = await f.read()
                 data = json.loads(content)
 

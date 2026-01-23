@@ -2,12 +2,12 @@
 
 import logging
 from datetime import datetime
-from typing import Optional
+
 from rich.console import Console
 from rich.prompt import Confirm
 
-from ...domain.models.template import DayTemplate
 from ...domain.exceptions import SessionNotFound
+from ...domain.models.template import DayTemplate
 from ..container import Container
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class SaveTemplateUseCase:
     async def execute(
         self,
         name: str,
-        session_id: Optional[str] = None,
+        session_id: str | None = None,
         description: str = "",
         force: bool = False,
     ) -> bool:

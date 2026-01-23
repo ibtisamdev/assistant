@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional
+
 from ..models.planning import Plan, ScheduleItem, TaskStatus
 from ..models.session import Memory
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class TaskImportService:
     """Business logic for importing incomplete tasks from previous sessions."""
 
-    def get_incomplete_tasks(self, memory: Memory) -> List[ScheduleItem]:
+    def get_incomplete_tasks(self, memory: Memory) -> list[ScheduleItem]:
         """
         Get incomplete tasks from a session.
 
@@ -31,7 +31,7 @@ class TaskImportService:
             if item.status in [TaskStatus.not_started, TaskStatus.in_progress]
         ]
 
-    def get_skipped_tasks(self, memory: Memory) -> List[ScheduleItem]:
+    def get_skipped_tasks(self, memory: Memory) -> list[ScheduleItem]:
         """
         Get skipped tasks from a session (user may want to retry).
 
@@ -70,7 +70,7 @@ class TaskImportService:
             }
         )
 
-    def prepare_tasks_for_import(self, tasks: List[ScheduleItem]) -> List[ScheduleItem]:
+    def prepare_tasks_for_import(self, tasks: list[ScheduleItem]) -> list[ScheduleItem]:
         """
         Prepare multiple tasks for import.
 
@@ -82,7 +82,7 @@ class TaskImportService:
         """
         return [self.prepare_task_for_import(task) for task in tasks]
 
-    def format_tasks_for_context(self, tasks: List[ScheduleItem], source_date: str) -> str:
+    def format_tasks_for_context(self, tasks: list[ScheduleItem], source_date: str) -> str:
         """
         Format tasks for LLM context injection.
 
@@ -106,7 +106,7 @@ class TaskImportService:
 
         return "\n".join(lines)
 
-    def format_tasks_for_display(self, tasks: List[ScheduleItem]) -> List[dict]:
+    def format_tasks_for_display(self, tasks: list[ScheduleItem]) -> list[dict]:
         """
         Format tasks for CLI display.
 
@@ -130,7 +130,7 @@ class TaskImportService:
         ]
 
     def merge_imported_with_plan(
-        self, imported_tasks: List[ScheduleItem], existing_plan: Plan, position: str = "start"
+        self, imported_tasks: list[ScheduleItem], existing_plan: Plan, position: str = "start"
     ) -> Plan:
         """
         Merge imported tasks into an existing plan.
@@ -156,7 +156,7 @@ class TaskImportService:
 
         return existing_plan.model_copy(update={"schedule": new_schedule})
 
-    def get_yesterday_session_id(self, reference_date: Optional[str] = None) -> str:
+    def get_yesterday_session_id(self, reference_date: str | None = None) -> str:
         """
         Get the session ID for yesterday's date.
 
@@ -175,7 +175,7 @@ class TaskImportService:
         return yesterday.strftime("%Y-%m-%d")
 
     def summarize_import_candidates(
-        self, incomplete: List[ScheduleItem], skipped: List[ScheduleItem]
+        self, incomplete: list[ScheduleItem], skipped: list[ScheduleItem]
     ) -> dict:
         """
         Create a summary of import candidates.

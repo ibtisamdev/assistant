@@ -1,9 +1,9 @@
 """Async caching layer for storage."""
 
-from typing import Optional, Any, Dict
 import asyncio
-import time
 import logging
+import time
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +19,10 @@ class StorageCache:
             ttl: Time-to-live in seconds (default 5 minutes)
         """
         self.ttl = ttl
-        self._cache: Dict[str, tuple[Any, float]] = {}
+        self._cache: dict[str, tuple[Any, float]] = {}
         self._lock = asyncio.Lock()
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Get from cache if not expired."""
         async with self._lock:
             if key in self._cache:

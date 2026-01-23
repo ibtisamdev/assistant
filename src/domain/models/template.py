@@ -1,8 +1,8 @@
 """Day template models for reusable planning patterns."""
 
-from pydantic import BaseModel, Field
-from typing import List, Optional
 from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 from .planning import ScheduleItem, TaskStatus
 
@@ -19,15 +19,15 @@ class DayTemplate(BaseModel):
     description: str = Field(
         default="", description="Optional description of when to use this template"
     )
-    schedule: List[ScheduleItem] = Field(default_factory=list, description="Template tasks")
-    priorities: List[str] = Field(
+    schedule: list[ScheduleItem] = Field(default_factory=list, description="Template tasks")
+    priorities: list[str] = Field(
         default_factory=list, description="Default priorities for this template"
     )
     notes: str = Field(default="", description="Default notes")
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)
-    last_used: Optional[datetime] = Field(
+    last_used: datetime | None = Field(
         default=None, description="When template was last applied"
     )
     use_count: int = Field(default=0, description="Number of times template has been used")
@@ -67,5 +67,5 @@ class TemplateMetadata(BaseModel):
     description: str
     task_count: int
     created_at: datetime
-    last_used: Optional[datetime]
+    last_used: datetime | None
     use_count: int

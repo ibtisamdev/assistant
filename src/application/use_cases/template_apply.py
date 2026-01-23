@@ -2,12 +2,11 @@
 
 import logging
 from datetime import datetime
-from typing import Optional
+
 from rich.console import Console
 from rich.prompt import Confirm
 
-from ...domain.models import State, Memory, AgentState, SessionMetadata, ConversationHistory, Plan
-from ...domain.exceptions import SessionNotFound
+from ...domain.models import AgentState, ConversationHistory, Memory, Plan, SessionMetadata, State
 from ..container import Container
 
 logger = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ class ApplyTemplateUseCase:
     async def execute(
         self,
         name: str,
-        session_id: Optional[str] = None,
+        session_id: str | None = None,
         force: bool = False,
     ) -> bool:
         """
@@ -102,7 +101,7 @@ class ApplyTemplateUseCase:
         self.console.print(f"[bold green]Template '{name}' applied to {session_id}![/bold green]")
         self.console.print(f"[dim]Created plan with {len(plan.schedule)} tasks[/dim]")
         self.console.print(f"[dim]View it with: day show {session_id}[/dim]")
-        self.console.print(f"[dim]Track progress with: day checkin[/dim]")
+        self.console.print("[dim]Track progress with: day checkin[/dim]")
 
         # Show plan summary
         formatter = self.container.plan_formatter

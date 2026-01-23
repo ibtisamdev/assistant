@@ -1,9 +1,10 @@
 """Tests for state machine."""
 
 import pytest
-from src.domain.services.state_machine import StateMachine
-from src.domain.models.state import State
+
 from src.domain.exceptions import InvalidStateTransition
+from src.domain.models.state import State
+from src.domain.services.state_machine import StateMachine
 
 
 class TestStateMachine:

@@ -1,11 +1,11 @@
 """Planning service - business logic for plan manipulation."""
 
-from typing import List, Tuple
 from datetime import datetime
+
+from ..exceptions import InvalidPlan
 from ..models.planning import Plan, ScheduleItem
 from ..models.profile import UserProfile
 from ..models.session import Memory
-from ..exceptions import InvalidPlan
 
 
 class PlanningService:
@@ -57,20 +57,20 @@ Notes: {plan.notes}
 Total scheduled time: {duration} minutes ({duration // 60}h {duration % 60}m)"""
 
     def merge_schedule_items(
-        self, existing: List[ScheduleItem], new: List[ScheduleItem]
-    ) -> List[ScheduleItem]:
+        self, existing: list[ScheduleItem], new: list[ScheduleItem]
+    ) -> list[ScheduleItem]:
         """Merge schedule items, preferring newer items."""
         # Simple merge - replace completely
         # TODO: Implement smart merging
         return new if new else existing
 
     def calculate_free_time(
-        self, plan: Plan, work_hours: Tuple[str, str] = ("09:00", "17:00")
+        self, plan: Plan, work_hours: tuple[str, str] = ("09:00", "17:00")
     ) -> int:
         """Calculate available free time during work hours."""
         return plan.get_free_time(work_hours[0], work_hours[1])
 
-    def suggest_breaks(self, plan: Plan, break_frequency: int = 90) -> List[str]:
+    def suggest_breaks(self, plan: Plan, break_frequency: int = 90) -> list[str]:
         """Suggest break times based on schedule and break frequency."""
         suggestions = []
 
@@ -87,9 +87,9 @@ Total scheduled time: {duration} minutes ({duration // 60}h {duration % 60}m)"""
 
         return suggestions
 
-    def align_with_profile(self, plan: Plan, profile: UserProfile) -> List[str]:
+    def align_with_profile(self, plan: Plan, profile: UserProfile) -> list[str]:
         """Check plan alignment with user profile and return suggestions."""
-        suggestions = []
+        suggestions: list[str] = []
 
         # Check work hours
         if profile.work_hours:
@@ -122,7 +122,7 @@ Total scheduled time: {duration} minutes ({duration // 60}h {duration % 60}m)"""
         plan.calculate_total_duration()
         return plan
 
-    def validate_tracking_data(self, plan: Plan) -> Tuple[bool, List[str]]:
+    def validate_tracking_data(self, plan: Plan) -> tuple[bool, list[str]]:
         """
         Validate tracking data consistency across all tasks.
 
@@ -192,7 +192,6 @@ Total scheduled time: {duration} minutes ({duration // 60}h {duration % 60}m)"""
                     )
 
         # Update timestamp
-        from datetime import datetime
 
         profile.last_updated = datetime.now()
 
@@ -219,7 +218,7 @@ Total scheduled time: {duration} minutes ({duration // 60}h {duration % 60}m)"""
 
         return "Standard planning approach"
 
-    def _extract_common_adjustments(self, memory: Memory) -> List[str]:
+    def _extract_common_adjustments(self, memory: Memory) -> list[str]:
         """Extract common adjustments from feedback."""
         adjustments = []
 
