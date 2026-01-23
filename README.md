@@ -27,11 +27,28 @@
 
 ### Installation
 
-```bash
-# From PyPI
-pip install planmyday
+#### Homebrew (macOS/Linux)
 
-# From source (development)
+```bash
+brew install ibtisamdev/planmyday/pday
+```
+
+Or tap first for easier updates:
+
+```bash
+brew tap ibtisamdev/planmyday
+brew install pday
+```
+
+#### PyPI
+
+```bash
+pip install planmyday
+```
+
+#### From Source (development)
+
+```bash
 git clone https://github.com/ibtisamdev/planmyday.git
 cd planmyday
 pip install -e .

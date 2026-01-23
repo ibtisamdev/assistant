@@ -1,0 +1,113 @@
+name: Update Homebrew Formula
+
+on:
+  workflow_run:
+    workflows: ["Publish to PyPI"]
+    types: [completed]
+
+jobs:
+  update-formula:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version from release tag
+        id: version
+        run: |
+          # Get the tag that triggered the original release workflow
+          TAG=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}" \
+            | jq -r '.head_branch // .head_sha')
+          
+          # If it's a tag like v0.1.0, extract the version
+          if [[ "$TAG" == v* ]]; then
+            VERSION="${TAG#v}"
+          else
+            # Fallback: get latest release tag
+            VERSION=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
+              | jq -r '.tag_name' | sed 's/^v//')
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Detected version: $VERSION"
+
+      - name: Wait for PyPI and fetch package info
+        id: pypi
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MAX_ATTEMPTS=10
+          ATTEMPT=1
+          
+          echo "Waiting for PyPI to have version $VERSION..."
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Attempt $ATTEMPT of $MAX_ATTEMPTS..."
+            
+            RESPONSE=$(curl -s "https://pypi.org/pypi/planmyday/$VERSION/json")
+            
+            # Check if we got a valid response with the sdist URL
+            URL=$(echo "$RESPONSE" | jq -r '.urls[] | select(.packagetype == "sdist") | .url' 2>/dev/null)
+            SHA256=$(echo "$RESPONSE" | jq -r '.urls[] | select(.packagetype == "sdist") | .digests.sha256' 2>/dev/null)
+            
+            if [ -n "$URL" ] && [ "$URL" != "null" ] && [ -n "$SHA256" ] && [ "$SHA256" != "null" ]; then
+              echo "Found package on PyPI!"
+              echo "url=$URL" >> $GITHUB_OUTPUT
+              echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            
+            echo "Package not yet available, waiting..."
+            sleep $((ATTEMPT * 30))
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          
+          echo "::error::Failed to find package on PyPI after $MAX_ATTEMPTS attempts"
+          exit 1
+
+      - name: Update formula
+        run: |
+          # Update the URL
+          sed -i 's|url "https://files.pythonhosted.org/packages/[^"]*"|url "${{ steps.pypi.outputs.url }}"|' Formula/pday.rb
+          
+          # Update the SHA256 (first occurrence after url, which is the main package sha256)
+          sed -i '0,/sha256 "[a-f0-9]\{64\}"/s|sha256 "[a-f0-9]\{64\}"|sha256 "${{ steps.pypi.outputs.sha256 }}"|' Formula/pday.rb
+          
+          echo "Updated Formula/pday.rb:"
+          head -10 Formula/pday.rb
+
+      - name: Regenerate Python dependencies
+        run: |
+          # Install poet to regenerate resources
+          pip install homebrew-pypi-poet
+          
+          # Generate new resources (this gets all transitive dependencies)
+          RESOURCES=$(poet planmyday 2>/dev/null | grep -A3 'resource "' | grep -v 'resource "planmyday"' -A3)
+          
+          # For now, we'll skip full resource regeneration as it's complex
+          # The existing pinned versions should work for minor updates
+          # Full regeneration would require parsing and replacing the resource blocks
+          echo "Note: Python dependency versions unchanged. For major updates, regenerate manually with 'poet planmyday'"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add Formula/pday.rb
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          git commit -m "chore(formula): update to v${{ steps.version.outputs.version }}"
+          git push
