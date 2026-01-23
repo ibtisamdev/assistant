@@ -27,20 +27,18 @@
 
 ### Installation
 
-#### Homebrew (macOS/Linux)
+#### pipx (Recommended)
 
 ```bash
-brew install ibtisamdev/planmyday/pday
+# Install pipx if you don't have it
+brew install pipx  # macOS
+# or: pip install --user pipx
+
+# Install planmyday
+pipx install planmyday
 ```
 
-Or tap first for easier updates:
-
-```bash
-brew tap ibtisamdev/planmyday
-brew install pday
-```
-
-#### PyPI
+#### pip
 
 ```bash
 pip install planmyday
