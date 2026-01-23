@@ -1,6 +1,6 @@
 # User Profile System
 
-The Personal Planning Assistant now includes an **expanded user profile system** that captures rich context about you to create more personalized and effective daily plans.
+**planmyday** includes an **expanded user profile system** that captures rich context about you to create more personalized and effective daily plans.
 
 ## What's New in v0.2.0
 
@@ -26,23 +26,23 @@ The Personal Planning Assistant now includes an **expanded user profile system**
 
 ```bash
 # Full guided setup (recommended for first time)
-day profile
+pday profile
 
 # Setup specific section
-day profile personal
-day profile productivity
-day profile wellness
-day profile work
-day profile learning
-day profile priorities
-day profile tasks
-day profile blocked
+pday profile personal
+pday profile productivity
+pday profile wellness
+pday profile work
+pday profile learning
+pday profile priorities
+pday profile tasks
+pday profile blocked
 ```
 
 ### View Your Profile
 
 ```bash
-day show-profile
+pday show-profile
 ```
 
 ## Profile Sections in Detail
@@ -168,31 +168,31 @@ After each completed session, the agent automatically:
 
 ```bash
 # Full interactive setup
-day profile
+pday profile
 
 # Edit specific section
-day profile personal
-day profile schedule       # Work hours & energy
-day profile productivity
-day profile wellness
-day profile work
-day profile learning
-day profile priorities
-day profile tasks          # Recurring tasks
-day profile blocked        # Blocked times
+pday profile personal
+pday profile schedule       # Work hours & energy
+pday profile productivity
+pday profile wellness
+pday profile work
+pday profile learning
+pday profile priorities
+pday profile tasks          # Recurring tasks
+pday profile blocked        # Blocked times
 
 # Specify user (multi-user support)
-day profile --user-id john
+pday profile --user-id john
 ```
 
 ### View Profile
 
 ```bash
 # Show current profile summary
-day show-profile
+pday show-profile
 
 # Show specific user's profile
-day show-profile --user-id john
+pday show-profile --user-id john
 ```
 
 ## Examples
@@ -200,7 +200,7 @@ day show-profile --user-id john
 ### Example: Full Profile Setup
 
 ```bash
-$ day profile
+$ pday profile
 
 ============================================================
 Welcome to the Personal Planning Assistant Profile Setup
@@ -246,7 +246,7 @@ Profile setup complete!
 ### Example: View Profile
 
 ```bash
-$ day show-profile
+$ pday show-profile
 
 ╭─────────────── User Profile: default ────────────────╮
 │ Field                   Value                         │
@@ -311,24 +311,26 @@ The agent now:
 
 ## Profile Storage
 
-- **Location**: `profiles/{user_id}.json`
+- **Location**: `~/.local/share/planmyday/profiles/{user_id}.json`
 - **Format**: JSON (human-readable and editable)
 - **Auto-save**: All changes save immediately
 - **Auto-create**: Profile created with defaults on first use
 - **Privacy**: Not uploaded anywhere, stays local
+
+> **Note:** Use `pday --local profile` to store profiles in the current directory (dev mode).
 
 ## Migration from v0.1.x
 
 If you're upgrading from v0.1.x:
 
 1. Old profiles in `profiles/` will be **incompatible** with the new schema
-2. Delete or backup old profiles: `rm profiles/*.json`
-3. Run `day profile` to create a fresh profile
+2. Delete or backup old profiles: `rm ~/.local/share/planmyday/profiles/*.json`
+3. Run `pday profile` to create a fresh profile
 4. New profile will have sensible defaults for all fields
 
 ## Advanced: Direct File Editing
 
-For power users, you can edit `profiles/default.json` directly:
+For power users, you can edit `~/.local/share/planmyday/profiles/default.json` directly:
 
 ```json
 {
@@ -358,20 +360,20 @@ For power users, you can edit `profiles/default.json` directly:
 
 ```bash
 # Check if profile exists
-ls -la profiles/
+ls -la ~/.local/share/planmyday/profiles/
 
 # Create new profile
-day profile
+pday profile
 ```
 
 ### Reset profile to defaults
 
 ```bash
 # Delete current profile
-rm profiles/default.json
+rm ~/.local/share/planmyday/profiles/default.json
 
 # Create fresh profile
-day profile
+pday profile
 ```
 
 ### Planning history not updating
@@ -382,7 +384,7 @@ The planning history auto-updates when:
 
 Check logs for errors:
 ```bash
-day start --debug
+pday start --debug
 ```
 
 ## Future Enhancements

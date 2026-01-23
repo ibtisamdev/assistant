@@ -1,106 +1,111 @@
-# Personal Assistant
+# planmyday
 
-[![CI](https://github.com/ibtisamdev/assistant/actions/workflows/test.yml/badge.svg)](https://github.com/ibtisamdev/assistant/actions/workflows/test.yml)
+[![CI](https://github.com/ibtisamdev/planmyday/actions/workflows/test.yml/badge.svg)](https://github.com/ibtisamdev/planmyday/actions/workflows/test.yml)
 [![Version](https://img.shields.io/badge/version-0.1.0--dev-orange)](CHANGELOG.md)
 [![Python](https://img.shields.io/badge/python-3.12+-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-A Daily Planning AI Agent that helps you create realistic daily plans through interactive conversation. Built with clean architecture, async-first design, and extensibility in mind.
+**planmyday** (`pday`) - An AI-powered daily planning assistant that helps you create realistic daily plans through interactive conversation. Built with clean architecture, async-first design, and extensibility in mind.
 
-> **⚠️ Development Version:** This project is in active development (`v0.1.0-dev`). 
-> 
-> **No releases until v1.0.0** - The first production release will be made after all 5 roadmap priorities are complete.
-> 
-> **Progress:** ✅ Stability ✅ Time Tracking ✅ Profile System ⏳ Export ⏳ Analytics ⏳ Workflow
-> 
-> See [CHANGELOG.md](CHANGELOG.md) for detailed development history.
+> **Note:** This project is in active development (`v0.1.0-dev`). See [CHANGELOG.md](CHANGELOG.md) for detailed development history.
 
-## 🎯 Features
+## Features
 
-**Current Features:**
 - Interactive planning with clarifying questions
 - Structured daily plans (schedule, priorities, notes)
 - Multi-turn conversation for plan refinement
 - Session persistence and resume capability
-- **Expanded user profiles** - 10 categories (personal, productivity, wellness, work, learning, history)
-- **Auto-learning system** - Improves with every session
-- **Profile completeness scoring** - Reduces redundant questions
+- Expanded user profiles (10 categories)
+- Auto-learning system that improves with every session
 - Beautiful terminal UI with colors and tables
-- Async operations for responsiveness
-- **Time tracking** with interactive check-ins
-- Automatic time estimation by LLM
+- Time tracking with interactive check-ins
 - Progress monitoring and analytics
-- Actual vs planned variance tracking
-- Manual time editing with audit trail
+- Export to Markdown
+- Template system for recurring schedules
 
-**Coming Soon:**
-- Export to Markdown, PDF, iCal
-- Daily summary reports
-- SQLite storage backend
-- Multi-agent coordination
-- Calendar integration
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
 ```bash
-# Install dependencies using uv (recommended)
-uv sync
+# From PyPI (when released)
+pip install planmyday
 
-# Or using pip
+# From source (development)
+git clone https://github.com/ibtisamdev/planmyday.git
+cd planmyday
 pip install -e .
 ```
 
-### Setup
-
-Create a `.env` file:
+### First-Time Setup
 
 ```bash
-OPENAI_API_KEY=your_openai_api_key_here
+# Run the setup wizard
+pday setup
 ```
+
+This will:
+1. Prompt for your OpenAI API key
+2. Create configuration directories
+3. Set up data storage
 
 ### Usage
 
+> **Tip:** Use `pday` for quick access, or `planmyday` for the full command.
+
 ```bash
-# Quick start - create or resume today's plan
-day start
+# Create or resume today's plan
+pday start
 
 # Start plan for specific date
-day start 2026-01-23
+pday start 2026-01-23
 
 # List all saved sessions
-day list
+pday list
 
 # Revise an existing plan
-day revise
+pday revise
 
 # View a saved plan
-day show 2026-01-19
+pday show 2026-01-19
 
 # Time tracking
-day checkin                      # Interactive check-in
-day checkin --start "Task name"  # Quick start
-day checkin --complete "Task"    # Quick complete
-day checkin --status             # View progress
+pday checkin                      # Interactive check-in
+pday checkin --start "Task name"  # Quick start task
+pday checkin --complete "Task"    # Quick complete task
+pday checkin --status             # View progress
 
 # Export commands
-day export                       # Export today's plan to Markdown
-day summary                      # Export end-of-day summary
-day export-all                   # Export both files
+pday export                       # Export today's plan to Markdown
+pday summary                      # Export end-of-day summary
+pday export-all                   # Export both files
 
 # Profile management
-day profile                      # Full guided setup
-day profile productivity         # Edit specific section
-day show-profile                 # View current profile
+pday profile                      # Full guided setup
+pday profile productivity         # Edit specific section
+pday show-profile                 # View current profile
+
+# Templates
+pday template list                # List saved templates
+pday template save work-day       # Save current plan as template
+pday template apply work-day      # Create plan from template
+
+# Statistics
+pday stats                        # Today's stats
+pday stats --week                 # This week's summary
+pday stats --month                # This month's summary
 
 # Session management
-day delete 2026-01-19            # Delete a session
-day info 2026-01-19              # Show session details
+pday delete 2026-01-19            # Delete a session
+pday info 2026-01-19              # Show session details
+
+# Configuration
+pday config --path                # Show config file locations
+pday setup                        # Re-run setup wizard
 
 # Get help
-day --help
-day --version
+pday --help
+pday --version
 ```
 
 The agent will:
@@ -109,13 +114,28 @@ The agent will:
 3. Allow iterative refinement based on feedback
 4. Save your session automatically
 
-## 📋 Requirements
+## Configuration
+
+planmyday stores configuration and data in standard locations:
+
+| Type | Location |
+|------|----------|
+| Config | `~/.config/planmyday/` |
+| Data | `~/.local/share/planmyday/` |
+
+For development, use `--local` flag to store data in the current directory:
+
+```bash
+pday --local start
+```
+
+## Requirements
 
 - Python 3.12+
 - OpenAI API key
-- Dependencies managed by `uv` or `pip`
+- macOS or Linux
 
-## 🏗️ Architecture
+## Architecture
 
 ### Clean Architecture Layers
 
@@ -137,7 +157,6 @@ src/
 │   └── use_cases/   # Business workflows
 │
 └── cli/             # Command-line interface
-    └── commands/    # CLI commands
 ```
 
 ### Key Principles
@@ -148,15 +167,7 @@ src/
 - **Extensible:** Add features without modifying existing code
 - **Type-safe:** Comprehensive type hints and Pydantic validation
 
-### State Machine
-
-The agent operates as a state machine:
-- `idle` → Get user goal
-- `questions` → Ask clarifying questions
-- `feedback` → Present plan and gather feedback
-- `done` → Plan finalized
-
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -169,24 +180,17 @@ uv run pytest --cov=src --cov-report=html
 uv run pytest tests/unit/domain/test_state_machine.py
 ```
 
-## 📚 Documentation
+## Documentation
 
-- **[CHANGELOG.md](CHANGELOG.md)** - Development history (tracked by date)
-- **[ROADMAP.md](ROADMAP.md)** - Development roadmap and progress
+- **[CHANGELOG.md](CHANGELOG.md)** - Development history
+- **[ROADMAP.md](ROADMAP.md)** - Development roadmap
 - **[AGENTS.md](AGENTS.md)** - Developer guide for AI coding agents
-- **[docs/user-profiles.md](docs/user-profiles.md)** - User profile system guide
+- **[docs/user-profiles.md](docs/user-profiles.md)** - User profile system
 - **[docs/configuration.md](docs/configuration.md)** - Configuration guide
-- **[docs/](docs/)** - Additional documentation
 
+## License
 
-
-## 🤝 Contributing
-
-This is a personal project, but suggestions and improvements are welcome!
-
-## 📄 License
-
-Private project - not currently licensed for public use.
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 

@@ -45,11 +45,11 @@ Production readiness testing infrastructure and quality gates.
 - [ ] Export workflow (session → markdown file)
 
 #### Phase 5: CLI Smoke Tests
-- [ ] `day start` - basic smoke test
-- [ ] `day list` - session listing
-- [ ] `day show <date>` - plan display
-- [ ] `day checkin` - time tracking
-- [ ] `day export` - file generation
+- [ ] `pday start` - basic smoke test
+- [ ] `pday list` - session listing
+- [ ] `pday show <date>` - plan display
+- [ ] `pday checkin` - time tracking
+- [ ] `pday export` - file generation
 
 #### Phase 6: Quality Gates (v1.0 Release Criteria)
 - [ ] Unit test coverage ≥80%
@@ -59,15 +59,15 @@ Production readiness testing infrastructure and quality gates.
 - [ ] CI passes on all PRs
 
 ### Priority 4 Future Enhancements
-- [ ] Markdown export of metrics - `day stats --export`
-  - Export daily/weekly/monthly stats to `data/metrics/`
+- [ ] Markdown export of metrics - `pday stats --export`
+  - Export daily/weekly/monthly stats to `~/.local/share/planmyday/exports/metrics/`
   - Include charts as ASCII art or embedded images
 - [ ] Graphs and visualizations
   - Completion rate trend over time (line chart)
   - Category distribution (pie chart)
   - Time variance histogram
   - Requires external library (e.g., plotext for terminal, matplotlib for export)
-- [ ] Period comparison - `day stats --compare`
+- [ ] Period comparison - `pday stats --compare`
   - Compare current week vs last week
   - Compare current month vs last month
   - Show improvement/decline percentages
@@ -76,7 +76,7 @@ Production readiness testing infrastructure and quality gates.
   - Set targets: "80% productive time", "90% completion rate"
   - Track progress toward goals
   - Celebrate achievements
-  - Command: `day goals` to set/view
+  - Command: `pday goals` to set/view
 - [ ] Category customization
   - User-defined categories beyond the defaults
   - Category aliases ("deep work" → "productive")
@@ -94,23 +94,23 @@ Production readiness testing infrastructure and quality gates.
 ## Completed
 
 ### Priority 5: Workflow Integration - Completed 2026-01-22
-- [x] **Quick start mode** - `day quick [DATE]`
+- [x] **Quick start mode** - `pday quick [DATE]`
   - Skip clarifying questions for users with established routines
   - Uses yesterday's plan structure as template
   - Automatically includes incomplete tasks from yesterday
-  - Falls back to normal `day start` if no previous session exists
+  - Falls back to normal `pday start` if no previous session exists
   - Supports `--template <name>` flag to use saved templates
-- [x] **Recurring task templates** - `day template` command group
-  - `day template list` - List all saved templates
-  - `day template save <name>` - Save current day's plan as template
-  - `day template show <name>` - Display template details
-  - `day template apply <name>` - Create plan from template
-  - `day template delete <name>` - Delete a template
-  - Templates stored in `data/templates/` directory
+- [x] **Recurring task templates** - `pday template` command group
+  - `pday template list` - List all saved templates
+  - `pday template save <name>` - Save current day's plan as template
+  - `pday template show <name>` - Display template details
+  - `pday template apply <name>` - Create plan from template
+  - `pday template delete <name>` - Delete a template
+  - Templates stored in `~/.local/share/planmyday/templates/` directory
   - Tracks usage statistics (use count, last used date)
 - [x] **Import yesterday's incomplete tasks**
-  - `day import` - Standalone command to import tasks
-  - Auto-prompt in `day start`: "Found 3 incomplete tasks. Import? [Y/n]"
+  - `pday import` - Standalone command to import tasks
+  - Auto-prompt in `pday start`: "Found 3 incomplete tasks. Import? [Y/n]"
   - Interactive task selection (import all, select specific, or skip)
   - Supports `--from <date>` to import from specific date
   - `--include-skipped` flag to also import skipped tasks
@@ -134,18 +134,18 @@ Production readiness testing infrastructure and quality gates.
 - [x] **Time categorization**
   - TaskCategory enum: productive, meetings, admin, breaks, wasted, uncategorized
   - LLM auto-suggests categories during plan creation
-  - Users can edit categories via `day checkin` menu (option 7)
+  - Users can edit categories via `pday checkin` menu (option 7)
   - Categories tracked in session data
-- [x] **Daily stats command** - `day stats [date]`
+- [x] **Daily stats command** - `pday stats [date]`
   - Total productive time vs wasted time
   - Task completion rate with visual progress bar
   - Most time-consuming activities (top 5)
   - Estimated vs actual accuracy metrics
   - Color-coded category breakdown table
 - [x] **Weekly/monthly summaries**
-  - `day stats --week` - Current week summary (Monday-Sunday)
-  - `day stats --month` - Current month summary
-  - `day stats --from YYYY-MM-DD --to YYYY-MM-DD` - Custom date range
+  - `pday stats --week` - Current week summary (Monday-Sunday)
+  - `pday stats --month` - Current month summary
+  - `pday stats --from YYYY-MM-DD --to YYYY-MM-DD` - Custom date range
   - Aggregate data across multiple days
   - Pattern identification: time sinks, completion trends, consistent habits
   - Best/worst day tracking
@@ -168,20 +168,20 @@ Production readiness testing infrastructure and quality gates.
 - Foundation for future goals and advanced insights
 
 ### Priority 3: Export & Review - Completed 2026-01-22
-- [x] **Markdown export** - `day export [DATE]`
-  - Export plan to `data/plans/YYYY-MM-DD.md`
+- [x] **Markdown export** - `pday export [DATE]`
+  - Export plan to `~/.local/share/planmyday/exports/plans/YYYY-MM-DD.md`
   - Include: schedule, time estimates, priorities, notes
   - Checkboxes for manual tracking
   - Human-readable date headers
   - Total estimated time in footer
-- [x] **Daily summary export** - `day summary [DATE]`
+- [x] **Daily summary export** - `pday summary [DATE]`
   - Export actual time spent, completion status
-  - File: `data/summaries/YYYY-MM-DD-summary.md`
+  - File: `~/.local/share/planmyday/exports/summaries/YYYY-MM-DD-summary.md`
   - Shows: planned vs actual time, completed tasks, notes
   - Completion overview table with stats
   - Time analysis with variance indicators
   - Graceful handling of missing tracking data (shows N/A)
-- [x] **Combined export** - `day export-all [DATE]`
+- [x] **Combined export** - `pday export-all [DATE]`
   - Exports both plan and summary in one command
 
 
@@ -208,11 +208,11 @@ Production readiness testing infrastructure and quality gates.
   - WorkContext (job role, meeting-heavy days, deadline patterns, collaboration preference, typical meeting duration)
   - LearningPreferences (learning style, skill development goals, areas of interest, preferred learning time)
   - PlanningHistory (auto-learned patterns: successful approaches, avoided patterns, common adjustments, feedback notes, session stats)
-- [x] **Profile Setup Wizard** - `day profile`
+- [x] **Profile Setup Wizard** - `pday profile`
   - Full interactive setup wizard (530 lines, 9 sections)
-  - Section-based editing: `day profile <section>`
+  - Section-based editing: `pday profile <section>`
   - Sections: personal, schedule, productivity, wellness, work, learning, priorities, tasks, blocked
-  - `day show-profile` - Display formatted profile with Rich
+  - `pday show-profile` - Display formatted profile with Rich
   - Multi-user support with `--user-id` flag
 - [x] **Auto-Learning System**
   - Tracks successful planning patterns (no changes = successful)
@@ -247,7 +247,7 @@ Production readiness testing infrastructure and quality gates.
 - Foundation for Priority 4 (analytics) and Priority 5 (workflow)
 
 ### Priority 2: Time Tracking - Completed 2026-01-21
-- [x] **Check-in system** - `day checkin`
+- [x] **Check-in system** - `pday checkin`
   - Interactive menu with 7 options (view, start, complete, skip, stats, edit, exit)
   - Quick action flags: `--start`, `--complete`, `--skip`, `--status`
   - Shows today's plan with progress indicators

@@ -16,18 +16,26 @@ from src.infrastructure.storage.json_storage import JSONStorage
 
 
 @pytest.fixture
-def test_config():
-    """Create test config."""
+def test_config(tmp_path):
+    """Create test config with local paths."""
     return AppConfig(
         llm=LLMConfig(api_key="test-key", model="gpt-4o-mini"),
-        storage=StorageConfig(backend="json", sessions_dir="test_sessions"),
+        storage=StorageConfig(
+            backend="json",
+            use_local=True,
+            sessions_dir=tmp_path / "sessions",
+            profiles_dir=tmp_path / "profiles",
+            templates_dir=tmp_path / "templates",
+            plans_export_dir=tmp_path / "plans",
+            summaries_export_dir=tmp_path / "summaries",
+        ),
         input=InputConfig(),
         retry=RetryConfig(),
     )
 
 
 @pytest.fixture
-def container(test_config):
+def container(test_config, tmp_path):
     """Create container with test config."""
     return Container(test_config)
 

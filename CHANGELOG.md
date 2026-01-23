@@ -7,7 +7,66 @@ This project is currently in **development mode (v0.1.0-dev)**. All changes are 
 ## [Unreleased] - Development (v0.1.0-dev)
 
 ### Planned Features
-- Priority 6: Testing & CI/CD (v1.0 Release Gate) - Phase 2 complete, Phases 3-6 remaining
+- Priority 6: Testing & CI/CD (v1.0 Release Gate) - Phase 3 in progress
+
+### 2026-01-23: Package Rename & Global Storage (Priority 6 - Part 2)
+
+Major package restructuring for PyPI distribution and improved user experience.
+
+### Changed
+
+**Package Rename:**
+- Package name changed from `personal-assistant` to `planmyday`
+- CLI command changed from `day` to `pday` (with `planmyday` as full alias)
+- Both `pday` and `planmyday` commands are now available
+- All documentation updated to use `pday` as the primary command
+
+**Global Data Storage (XDG Base Directory spec):**
+- Config location: `~/.config/planmyday/`
+- Data location: `~/.local/share/planmyday/`
+  - Sessions: `~/.local/share/planmyday/sessions/`
+  - Profiles: `~/.local/share/planmyday/profiles/`
+  - Templates: `~/.local/share/planmyday/templates/`
+  - Exports: `~/.local/share/planmyday/exports/`
+- `--local` flag for development mode (uses current directory)
+
+### Added
+
+**First-Time Setup Wizard (`pday setup`):**
+- Interactive setup for first-time users
+- Prompts for OpenAI API key with validation
+- Creates config and data directories automatically
+- Stores API key securely in `~/.config/planmyday/.env` (permissions 600)
+- Shows helpful next steps after setup
+
+**Configuration Commands:**
+- `pday config --path` - Show config file locations
+- `pday config --show` - Display current configuration
+
+**Package Metadata (PyPI-ready):**
+- Added `authors`, `license`, `keywords`, `classifiers` to pyproject.toml
+- Added `project.urls` for Homepage, Repository, Documentation, Bug Tracker
+- Created MIT LICENSE file
+
+**New Exception:**
+- `SetupRequired` exception for first-time setup detection
+
+### Technical Details
+
+**New Files:**
+- `LICENSE` - MIT license
+- `src/cli/setup_wizard.py` - First-time setup wizard
+
+**Modified Files:**
+- `pyproject.toml` - Package name, metadata, dual CLI entry points
+- `src/application/config.py` - XDG paths, SetupRequired detection
+- `src/domain/exceptions.py` - SetupRequired exception
+- `src/cli/main.py` - New commands, --local flag, updated hints
+- `README.md` - Updated for planmyday branding
+- `AGENTS.md` - Updated commands and paths
+- `docs/*.md` - Updated command references
+
+---
 
 ### 2026-01-23: CI/CD Pipeline (Priority 6 - Part 1)
 
@@ -60,29 +119,29 @@ Complete implementation of workflow streamlining features: quick start mode, rec
 
 ### Added
 
-**Quick Start Mode (`day quick`):**
-- `day quick [DATE]` - Fast plan creation using yesterday's pattern
+**Quick Start Mode (`pday quick`):**
+- `pday quick [DATE]` - Fast plan creation using yesterday's pattern
 - Skips clarifying questions for users with established routines
 - Automatically includes incomplete tasks from yesterday
-- Falls back to `day start` if no previous session exists
+- Falls back to `pday start` if no previous session exists
 - `--template <name>` flag to use saved template instead of yesterday
 - Profile completeness check (requires score >= 2)
 - Direct feedback state entry for rapid iterations
 
 **Recurring Task Templates:**
-- `day template list` - List all saved templates with usage stats
-- `day template save <name>` - Save current plan as reusable template
-- `day template show <name>` - Display template details and schedule
-- `day template apply <name>` - Create new plan from template
-- `day template delete <name>` - Remove a template
+- `pday template list` - List all saved templates with usage stats
+- `pday template save <name>` - Save current plan as reusable template
+- `pday template show <name>` - Display template details and schedule
+- `pday template apply <name>` - Create new plan from template
+- `pday template delete <name>` - Remove a template
 - Templates stored in `data/templates/{name}.json`
 - `DayTemplate` model with metadata (created_at, last_used, use_count)
 - Automatic task status reset when applying templates
 - Usage tracking for template popularity
 
 **Task Import System:**
-- `day import [DATE]` - Import incomplete tasks from previous session
-- Auto-prompt in `day start`: "Found 3 incomplete tasks. Import? [Y/n]"
+- `pday import [DATE]` - Import incomplete tasks from previous session
+- Auto-prompt in `pday start`: "Found 3 incomplete tasks. Import? [Y/n]"
 - Interactive task selection (all, specific numbers, or none)
 - `--from <date>` flag to import from specific date
 - `--include-skipped` flag to also import skipped tasks

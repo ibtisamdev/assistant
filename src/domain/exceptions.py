@@ -51,3 +51,17 @@ class StorageError(DomainException):
     """Storage-related errors."""
 
     pass
+
+
+class SetupRequiredError(Exception):
+    """Raised when first-time setup is needed.
+
+    This is not a DomainException because it's a configuration/setup issue,
+    not a business logic error.
+    """
+
+    pass
+
+
+# Alias for backward compatibility
+SetupRequired = SetupRequiredError

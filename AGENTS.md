@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guide for AI coding agents working in the personal-assistant repository.
+Guide for AI coding agents working in the planmyday repository.
 
 ## Project Overview
 
@@ -58,60 +58,53 @@ source .venv/bin/activate  # macOS/Linux
 ### Running the Application
 
 ```bash
+# First-time setup
+pday setup
+
 # Run with default settings (today's date)
-day start
+pday start
 
 # Start plan for specific date
-day start 2026-01-23
+pday start 2026-01-23
 
 # List all saved sessions
-day list
+pday list
 
 # View a saved plan
-day show 2026-01-19
+pday show 2026-01-19
 
 # Time tracking
-day checkin
+pday checkin
 
 # Get help
-day --help
+pday --help
+
+# Development mode (use current directory for data)
+pday --local start
 ```
 
 ### Testing
 
-**Note:** No test suite currently exists. When adding tests:
-
 ```bash
-# Install pytest first
-pip install pytest
-
-# Run all tests (future)
-pytest
+# Run all tests
+uv run pytest
 
 # Run a single test file
-pytest tests/test_agent.py
+uv run pytest tests/unit/domain/test_agent_service.py
 
 # Run a specific test function
-pytest tests/test_agent.py::test_agent_initialization
+uv run pytest tests/unit/domain/test_agent_service.py::test_agent_initialization
 
 # Run with verbose output
-pytest -v
+uv run pytest -v
 
 # Run with coverage
-pytest --cov=. --cov-report=html
+uv run pytest --cov=src --cov-report=html
 ```
 
-### Linting and Formatting
-
-**Note:** No linter/formatter configured. Recommended setup:
+### Linting and Type Checking
 
 ```bash
-# Install development tools
-pip install ruff black mypy
-
-# Format code with black
-black .
-
 # Lint with ruff
 ruff check .
 
@@ -286,10 +279,19 @@ The agent operates as a state machine with these states (see `models.py:10-16`):
 
 ### Memory Management
 
-- **Session state** stored in `sessions/YYYY-MM-DD.json`
-- **User profile** stored in `user_profile.json` (separate from sessions)
-- All state changes trigger auto-save via `memory.set()`
-- Use atomic writes (temp file + rename) for safety
+**Global storage (default):**
+- Config: `~/.config/planmyday/`
+- Data: `~/.local/share/planmyday/`
+  - Sessions: `~/.local/share/planmyday/sessions/YYYY-MM-DD.json`
+  - Profiles: `~/.local/share/planmyday/profiles/`
+  - Templates: `~/.local/share/planmyday/templates/`
+  - Exports: `~/.local/share/planmyday/exports/`
+
+**Local storage (dev mode with `--local`):**
+- Sessions: `./sessions/YYYY-MM-DD.json`
+- Profiles: `./profiles/`
+
+All state changes trigger auto-save. Uses atomic writes (temp file + rename) for safety.
 
 ## Key Files
 

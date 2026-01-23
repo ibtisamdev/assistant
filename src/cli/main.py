@@ -15,8 +15,9 @@ from rich.prompt import Confirm
 from ..application.config import AppConfig
 from ..application.container import Container
 from ..application.session_orchestrator import SessionOrchestrator
-from ..domain.exceptions import LLMError, SessionNotFound
+from ..domain.exceptions import LLMError, SessionNotFound, SetupRequired
 from .profile_setup import ProfileSetupWizard
+from .setup_wizard import SetupWizard
 
 console = Console()
 
@@ -32,24 +33,46 @@ def setup_logging(level: str = "INFO"):
 
 
 @click.group()
-@click.version_option(version="0.1.0-dev", prog_name="day")
+@click.version_option(version="0.1.0-dev", prog_name="planmyday")
 @click.option("--debug", is_flag=True, help="Enable debug mode")
 @click.option("--config", type=click.Path(exists=True), help="Config file path")
+@click.option("--local", is_flag=True, help="Use current directory for data (dev mode)")
 @click.pass_context
-def cli(ctx, debug, config):
+def cli(ctx, debug, config, local):
     """
-    Daily Planning AI Agent
+    planmyday - Daily Planning AI Agent
 
     Your personalized assistant for creating realistic daily plans.
+
+    \b
+    Quick start:
+      pday start          Create or resume today's plan
+      pday checkin        Track task progress
+      pday stats          View productivity metrics
+
+    \b
+    Full command: planmyday (alias: pday)
     """
     # Setup logging
     log_level = "DEBUG" if debug else "INFO"
     setup_logging(log_level)
 
+    # Store context early for commands that don't need config (like setup)
+    ctx.ensure_object(dict)
+    ctx.obj["debug"] = debug
+    ctx.obj["local"] = local
+
+    # Skip config loading for setup command
+    if ctx.invoked_subcommand == "setup":
+        return
+
     # Load configuration
     try:
         env_file = Path(".env") if not config else Path(config).parent / ".env"
-        app_config = AppConfig.load(env_file=env_file if env_file.exists() else None)
+        app_config = AppConfig.load(
+            env_file=env_file if env_file.exists() else None,
+            use_local=local,
+        )
 
         if debug:
             app_config.debug = True
@@ -59,13 +82,91 @@ def cli(ctx, debug, config):
         container = Container(app_config)
 
         # Store in context for subcommands
-        ctx.ensure_object(dict)
         ctx.obj["container"] = container
         ctx.obj["config"] = app_config
 
+    except SetupRequired as e:
+        console.print(f"[bold yellow]Setup Required[/bold yellow]\n\n{e}")
+        sys.exit(1)
     except Exception as e:
         console.print(f"[bold red]Configuration Error:[/bold red] {e}")
+        if debug:
+            raise
         sys.exit(1)
+
+
+# ===== Setup & Configuration Commands =====
+
+
+@cli.command()
+@click.pass_context
+def setup(ctx):
+    """
+    First-time setup wizard.
+
+    Configures planmyday for first use:
+    - Sets up OpenAI API key
+    - Creates config and data directories
+    - Validates configuration
+
+    \b
+    Run this once after installation:
+      pday setup
+    """
+    wizard = SetupWizard()
+
+    if wizard.is_configured():
+        rprint("[yellow]planmyday is already configured.[/yellow]")
+        rprint()
+        wizard.show_config_paths()
+        rprint()
+        if not Confirm.ask("Do you want to reconfigure?"):
+            return
+
+    success = wizard.run()
+    sys.exit(0 if success else 1)
+
+
+@cli.command("config")
+@click.option("--show", "show_config", is_flag=True, help="Show current configuration")
+@click.option("--path", "show_path", is_flag=True, help="Show config file paths")
+@click.option("--set-key", "set_api_key", is_flag=True, help="Update OpenAI API key")
+@click.pass_context
+def config_cmd(ctx, show_config, show_path, set_api_key):
+    """
+    View or update configuration.
+
+    \b
+    Examples:
+      pday config --path     # Show config file locations
+      pday config --show     # Display current config status
+      pday config --set-key  # Update OpenAI API key
+    """
+    wizard = SetupWizard()
+
+    if set_api_key:
+        success = wizard.update_api_key()
+        sys.exit(0 if success else 1)
+
+    if show_path or (not show_config and not show_path and not set_api_key):
+        wizard.show_config_paths()
+        return
+
+    if show_config:
+        # Show detailed config if available
+        if "config" in ctx.obj:
+            app_config = ctx.obj["config"]
+            rprint("[bold]Current Configuration:[/bold]")
+            rprint()
+            rprint(f"  Environment: {app_config.environment}")
+            rprint(f"  Debug: {app_config.debug}")
+            rprint(f"  LLM Provider: {app_config.llm.provider}")
+            rprint(f"  LLM Model: {app_config.llm.model}")
+            rprint(f"  Storage Backend: {app_config.storage.backend}")
+            rprint(f"  Sessions Dir: {app_config.storage.sessions_dir}")
+            rprint(f"  Profiles Dir: {app_config.storage.profiles_dir}")
+        else:
+            wizard.show_config_paths()
 
 
 # ===== Core Planning Commands =====
@@ -110,7 +211,7 @@ def quick(ctx, date, template):
     Uses yesterday's plan structure and carries over incomplete tasks.
     Skips clarifying questions for faster planning.
 
-    Falls back to normal 'day start' if no previous session exists.
+    Falls back to normal 'pday start' if no previous session exists.
     """
     from ..application.use_cases.quick_start import QuickStartUseCase
 
@@ -159,7 +260,7 @@ def revise(ctx, date):
             rprint("\n[bold green]✓ Plan revised![/bold green]")
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'pday start'[/dim]")
         except KeyboardInterrupt:
             rprint("\n[yellow]Cancelled. Progress saved.[/yellow]")
         except Exception as e:
@@ -186,7 +287,7 @@ def show(ctx, date):
 
         if not memory or not memory.agent_state.plan:
             rprint(f"[red]No plan found for {date}[/red]")
-            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'pday start'[/dim]")
             return
 
         formatter = container.plan_formatter
@@ -233,9 +334,9 @@ def import_tasks(ctx, date, from_date, import_all, include_skipped):
 
     \b
     Examples:
-      day import                    # Import from yesterday to today
-      day import --from 2026-01-20  # Import from specific date
-      day import --all              # Import all without prompting
+      pday import                    # Import from yesterday to today
+      pday import --from 2026-01-20  # Import from specific date
+      pday import --all              # Import all without prompting
     """
     from ..application.use_cases.import_tasks import ImportTasksUseCase
 
@@ -252,7 +353,7 @@ def import_tasks(ctx, date, from_date, import_all, include_skipped):
             )
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint("[dim]Hint: Create a plan first with 'day start' or 'day quick'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'pday start' or 'pday quick'[/dim]")
         except KeyboardInterrupt:
             rprint("\n[yellow]Import cancelled.[/yellow]")
         except Exception as e:
@@ -297,7 +398,7 @@ def checkin(ctx, date, start, complete, skip, status):
             )
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'pday start'[/dim]")
         except KeyboardInterrupt:
             rprint("\n[yellow]Check-in cancelled.[/yellow]")
         except Exception as e:
@@ -334,7 +435,7 @@ def export(ctx, date, output):
             await use_case.execute(session_id, output_path)
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'pday start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -366,7 +467,7 @@ def summary(ctx, date, output):
             await use_case.execute(session_id, output_path)
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'pday start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -396,7 +497,7 @@ def export_all(ctx, date):
             await use_case.execute(session_id)
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'pday start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -425,11 +526,11 @@ def stats(ctx, date, week, month, from_date, to_date, output_json):
 
     \b
     Examples:
-      day stats              # Today's stats
-      day stats 2026-01-20   # Specific day
-      day stats --week       # This week's summary
-      day stats --month      # This month's summary
-      day stats --from 2026-01-01 --to 2026-01-15  # Custom range
+      pday stats              # Today's stats
+      pday stats 2026-01-20   # Specific day
+      pday stats --week       # This week's summary
+      pday stats --month      # This month's summary
+      pday stats --from 2026-01-01 --to 2026-01-15  # Custom range
     """
     container = ctx.obj["container"]
 
@@ -457,7 +558,7 @@ def stats(ctx, date, week, month, from_date, to_date, output_json):
 
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'pday start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -600,7 +701,7 @@ def profile(ctx, section, user_id):
 @click.pass_context
 def template(ctx):
     """
-    Manage day templates.
+    Manage daily templates.
 
     Templates let you save and reuse common daily patterns.
     """
@@ -635,7 +736,7 @@ def template_save(ctx, name, date, description, force):
     """
     Save a day's plan as a template.
 
-    Example: day template save work-day --description "Standard work day"
+    Example: pday template save work-day --description "Standard work day"
     """
     from ..application.use_cases.template_save import SaveTemplateUseCase
 
@@ -647,7 +748,7 @@ def template_save(ctx, name, date, description, force):
             await use_case.execute(name, date, description, force)
         except SessionNotFound as e:
             rprint(f"[bold red]Error:[/bold red] {e}")
-            rprint("[dim]Hint: Create a plan first with 'day start'[/dim]")
+            rprint("[dim]Hint: Create a plan first with 'pday start'[/dim]")
         except Exception as e:
             rprint(f"\n[bold red]Error:[/bold red] {e}")
             if ctx.obj["config"].debug:
@@ -687,7 +788,7 @@ def template_apply(ctx, name, date, force):
     """
     Apply a template to create a new plan.
 
-    Example: day template apply work-day
+    Example: pday template apply work-day
     """
     from ..application.use_cases.template_apply import ApplyTemplateUseCase
 
@@ -744,7 +845,7 @@ def show_profile(ctx, user_id):
             profile = await storage.load_profile(user_id)
             if not profile:
                 rprint(f"[yellow]No profile found for '{user_id}'.[/yellow]")
-                rprint("[dim]Run 'day profile' to create one.[/dim]")
+                rprint("[dim]Run 'pday profile' to create one.[/dim]")
                 return
 
             # Display profile in a readable format
