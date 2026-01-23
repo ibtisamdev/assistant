@@ -25,9 +25,9 @@ class JSONStorage:
         self.profiles_dir = config.profiles_dir
         self.templates_dir = config.templates_dir
 
-        # Ensure directories exist
-        self.sessions_dir.mkdir(exist_ok=True)
-        self.profiles_dir.mkdir(exist_ok=True)
+        # Ensure directories exist (parents=True for fresh installs without setup)
+        self.sessions_dir.mkdir(parents=True, exist_ok=True)
+        self.profiles_dir.mkdir(parents=True, exist_ok=True)
         self.templates_dir.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"JSON storage initialized: {self.sessions_dir}")
