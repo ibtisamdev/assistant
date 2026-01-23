@@ -1,7 +1,6 @@
 # planmyday
 
 [![PyPI](https://img.shields.io/pypi/v/planmyday)](https://pypi.org/project/planmyday/)
-[![Downloads](https://img.shields.io/pypi/dm/planmyday)](https://pypi.org/project/planmyday/)
 [![Python](https://img.shields.io/badge/python-3.12+-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![CI](https://github.com/ibtisamdev/planmyday/actions/workflows/test.yml/badge.svg)](https://github.com/ibtisamdev/planmyday/actions/workflows/test.yml)
