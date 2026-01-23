@@ -1,13 +1,13 @@
 # planmyday
 
 [![CI](https://github.com/ibtisamdev/planmyday/actions/workflows/test.yml/badge.svg)](https://github.com/ibtisamdev/planmyday/actions/workflows/test.yml)
-[![Version](https://img.shields.io/badge/version-0.1.0--dev-orange)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](CHANGELOG.md)
 [![Python](https://img.shields.io/badge/python-3.12+-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 **planmyday** (`pday`) - An AI-powered daily planning assistant that helps you create realistic daily plans through interactive conversation. Built with clean architecture, async-first design, and extensibility in mind.
 
-> **Note:** This project is in active development (`v0.1.0-dev`). See [CHANGELOG.md](CHANGELOG.md) for detailed development history.
+> **Current version:** `v0.1.0` - First public release. See [CHANGELOG.md](CHANGELOG.md) for detailed history.
 
 ## Features
 

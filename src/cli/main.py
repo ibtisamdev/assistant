@@ -4,6 +4,7 @@ import asyncio
 import logging
 import sys
 from datetime import datetime
+from importlib.metadata import version as get_version
 from pathlib import Path
 
 import click
@@ -33,7 +34,7 @@ def setup_logging(level: str = "INFO"):
 
 
 @click.group()
-@click.version_option(version="0.1.0-dev", prog_name="planmyday")
+@click.version_option(version=get_version("planmyday"), prog_name="planmyday")
 @click.option("--debug", is_flag=True, help="Enable debug mode")
 @click.option("--config", type=click.Path(exists=True), help="Config file path")
 @click.option("--local", is_flag=True, help="Use current directory for data (dev mode)")

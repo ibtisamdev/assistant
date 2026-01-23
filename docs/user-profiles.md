@@ -2,7 +2,7 @@
 
 **planmyday** includes an **expanded user profile system** that captures rich context about you to create more personalized and effective daily plans.
 
-## What's New in v0.2.0
+## What's New
 
 ### 6 New Profile Sections
 
@@ -290,7 +290,7 @@ Agent: "When do you have the most energy?"
 ... (many questions every time)
 ```
 
-### After (v0.2.0)
+### After
 
 ```
 User: "Plan my day"
@@ -399,5 +399,5 @@ Planned for future versions:
 
 ---
 
-**Version**: v0.2.0  
-**Last Updated**: 2026-01-22
+**Version**: v0.1.0  
+**Last Updated**: 2026-01-23

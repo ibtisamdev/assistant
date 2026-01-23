@@ -10,16 +10,17 @@ This is a **Daily Planning AI Agent** - an agentic system that helps users creat
 
 ## Versioning Policy
 
-This project uses **development versioning** - staying at `v0.1.0-dev` until production-ready.
+This project follows [Semantic Versioning](https://semver.org/):
+- **MAJOR** (x.0.0): Breaking changes to the API or CLI interface
+- **MINOR** (0.x.0): New features, backwards compatible
+- **PATCH** (0.0.x): Bug fixes only
 
-**Current Version:** `0.1.0-dev` (Development)
+**Current Version:** `0.1.0` (First public release)
 
-**Why no intermediate versions?**
-- No users until production-ready (no releases during development)
-- Changes tracked by date in CHANGELOG.md, not version numbers
-- Version bump to `1.0.0` signals: "Ready for production use"
+**Release History:**
+- `v0.1.0` - 2026-01-23: First public release
 
-**When v1.0.0 will be released:**
+**Roadmap to v1.0.0:**
 - ✅ Priority 1: Stability (Completed 2026-01-19)
 - ✅ Priority 2: Time Tracking (Completed 2026-01-21)
 - ✅ Profile System Expansion (Completed 2026-01-22)
@@ -28,16 +29,7 @@ This project uses **development versioning** - staying at `v0.1.0-dev` until pro
 - ✅ Priority 5: Workflow Integration (Completed 2026-01-22)
 - ⏳ Priority 6: Testing & CI/CD
 
-**Post-1.0 Versioning:**
-
-After v1.0.0, this project will follow [Semantic Versioning](https://semver.org/):
-- **MAJOR** (x.0.0): Breaking changes to the API or CLI interface
-- **MINOR** (1.x.0): New features, backwards compatible
-- **PATCH** (1.0.x): Bug fixes only
-
-**No version bumps during development** - just track progress by date in CHANGELOG.md.
-
-See `CHANGELOG.md` for detailed development history.
+See `CHANGELOG.md` for detailed release history.
 
 ## Development Commands
 
