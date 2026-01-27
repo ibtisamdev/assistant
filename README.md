@@ -27,11 +27,26 @@
 
 ### Installation
 
-```bash
-# From PyPI
-pip install planmyday
+#### pipx (Recommended)
 
-# From source (development)
+```bash
+# Install pipx if you don't have it
+brew install pipx  # macOS
+# or: pip install --user pipx
+
+# Install planmyday
+pipx install planmyday
+```
+
+#### pip
+
+```bash
+pip install planmyday
+```
+
+#### From Source (development)
+
+```bash
 git clone https://github.com/ibtisamdev/planmyday.git
 cd planmyday
 pip install -e .

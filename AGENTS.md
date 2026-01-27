@@ -17,19 +17,7 @@ This project follows [Semantic Versioning](https://semver.org/):
 
 **Current Version:** `0.1.0` (First public release)
 
-**Release History:**
-- `v0.1.0` - 2026-01-23: First public release
-
-**Roadmap to v1.0.0:**
-- ✅ Priority 1: Stability (Completed 2026-01-19)
-- ✅ Priority 2: Time Tracking (Completed 2026-01-21)
-- ✅ Profile System Expansion (Completed 2026-01-22)
-- ✅ Priority 3: Export & Review (Completed 2026-01-22)
-- ✅ Priority 4: Productivity Metrics (Completed 2026-01-22)
-- ✅ Priority 5: Workflow Integration (Completed 2026-01-22)
-- ⏳ Priority 6: Testing & CI/CD
-
-See `CHANGELOG.md` for detailed release history.
+See [CHANGELOG.md](CHANGELOG.md) for release history and [ROADMAP.md](ROADMAP.md) for future plans.
 
 ## Development Commands
 
@@ -386,13 +374,11 @@ See `docs/configuration.md` for detailed troubleshooting guide.
 
 ## Future Extension Points
 
-From `docs/plan-v1.md`:
-- Multi-turn conversation improvements
-- Plan revision based on feedback
-- Export to Markdown
-- Calendar integration (Google Calendar, iCal)
-- Progress tracking throughout the day
-- Multi-agent coordination (planner, executor, reviewer)
+See [ROADMAP.md](ROADMAP.md) for planned features including:
+- Calendar integration (Google Calendar)
+- Productivity goals and targets
+- AI insights and recommendations
+- Web UI for visualization
 
 ---
 

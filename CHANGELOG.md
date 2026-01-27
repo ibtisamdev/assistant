@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-01-27
+
+### Fixed
+- Storage initialization now creates parent directories on fresh installs without requiring `pday setup` first
+
+### Changed
+- Simplified documentation (AGENTS.md, CLAUDE.md, ROADMAP.md)
+- Updated installation instructions to recommend pipx
+- Removed outdated planning docs (PRD.md, plan-v1.md, RELEASE_CHECKLIST_V1.md)
+
 ## [0.1.0] - 2026-01-23
 
 ### Added
